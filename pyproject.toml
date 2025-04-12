@@ -1,5 +1,5 @@
 [project]
-name = "inmet-bdmep-fetcher"
+name = "inmet-bdmep-data"
 version = "0.2.0"
 description = "Coletor de dados meteorológicos do INMET-BDMEP"
 authors = [
