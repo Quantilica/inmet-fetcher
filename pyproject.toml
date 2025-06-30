@@ -12,9 +12,16 @@ dependencies = [
     "pandas",
 ]
 
+[project.urls]
+Homepage = "https://github.com/dankkom/inmet-bdmep-data"
+Issues = "https://github.com/dankkom/inmet-bdmep-data/issues"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inmet_bdmep"]
