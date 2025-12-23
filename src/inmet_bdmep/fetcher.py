@@ -29,16 +29,18 @@ def download_year(
 
     url = build_url(year)
 
-    headers = httpx.head(url).headers
-    last_modified = parse_last_modified(headers["Last-Modified"])
-    file_size = int(headers.get("Content-Length", 0))
+    with httpx.Client(headers={"User-Agent": "Mozilla/5.0"}) as client:
 
-    destfilename = build_local_filename(year, last_modified)
-    destfilepath = destdirpath / destfilename
-    if destfilepath.exists() and destfilepath.stat().st_size == file_size:
-        return
+        headers = client.head(url, timeout=10).headers
 
-    with httpx.stream("GET", url) as r:
+        last_modified = parse_last_modified(headers["Last-Modified"])
+        file_size = int(headers.get("Content-Length", 0))
+
+        destfilename = build_local_filename(year, last_modified)
+        destfilepath = destdirpath / destfilename
+        if destfilepath.exists() and destfilepath.stat().st_size == file_size:
+            return
+
         pb = tqdm(
             desc=f"{year}",
             dynamic_ncols=True,
@@ -47,8 +49,9 @@ def download_year(
             unit="iB",
             unit_scale=True,
         )
-        with open(destfilepath, "wb") as f:
-            for data in r.iter_bytes(blocksize):
-                f.write(data)
-                pb.update(len(data))
+        with client.stream("GET", url, timeout=10) as r:
+            with open(destfilepath, "wb") as f:
+                for data in r.iter_bytes(blocksize):
+                    f.write(data)
+                    pb.update(len(data))
         pb.close()
