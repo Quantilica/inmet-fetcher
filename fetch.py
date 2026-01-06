@@ -1,4 +1,5 @@
 import argparse
+import datetime as dt
 from pathlib import Path
 
 from inmet_bdmep.fetcher import download_year
@@ -16,12 +17,14 @@ def expand_years(*years: str) -> list[int]:
 
 
 def get_args():
+    current_year = dt.datetime.now().year
     parser = argparse.ArgumentParser(
         description="Download INMET BDMEP data",
     )
     parser.add_argument(
         "years",
         nargs="+",
+        default=[f"2000:{current_year}"],
         help="Years to download",
     )
     parser.add_argument(
