@@ -29,3 +29,12 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/inmet_bdmep.py"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-httpx>=0.36.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
