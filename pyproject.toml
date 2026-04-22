@@ -13,6 +13,9 @@ dependencies = [
     "pyarrow",
 ]
 
+[project.scripts]
+inmet = "inmet_bdmep:main_cli"
+
 [project.urls]
 Homepage = "https://github.com/dankkom/inmet-bdmep-data"
 Issues = "https://github.com/dankkom/inmet-bdmep-data/issues"
@@ -25,4 +28,4 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/inmet_bdmep"]
+packages = ["src/inmet_bdmep.py"]

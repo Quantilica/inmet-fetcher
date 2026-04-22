@@ -1,53 +1,140 @@
-# INMET BDMEP data
+# 🌧️ INMET BDMEP Data: Dados Meteorológicos do Brasil ao seu alcance
 
-Python package to download and read INMET's BDMEP data.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Data source: https://portal.inmet.gov.br/dadoshistoricos
+O **inmet-bdmep-data** é uma ferramenta para desenvolvedores, cientistas e analistas de dados brasileiros que precisam acessar o **BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa)** do INMET.
 
-## fetch.py: Raw files fetcher
+Esqueça o trabalho braçal de baixar dezenas de arquivos ZIP manualmente, lidar com codificações `latin-1`, limpar cabeçalhos inconsistentes e padronizar nomes de colunas. Este pacote faz o trabalho sujo.
 
-Script to fetch raw data files from INMET's BDMEP site.
+---
 
-Usage:
+## ✨ Funcionalidades
 
+- 📥 **Download paralelo**: Baixe múltiplos anos simultaneamente com `--workers N`
+- 🧹 **Limpeza automática**: Remove linhas vazias e trata valores nulos (`-9999`)
+- 🕒 **Padronização de datas**: Combina `data` + `hora` em `datetime` nativo
+- 🏷️ **Colunas em snake_case**: Nomes padronizados, sem caracteres especiais
+- 🗺️ **Metadados por estação**: Lat, Lon, Altitude, UF, Código WMO incluídos
+- 🔍 **Filtros na leitura**: Por UF, estação, intervalo de datas
+- 💾 **Exportação**: Parquet, CSV ou JSON
+- 🐼 **pandas** e **polars** suportados
+
+---
+
+## 🚀 Instalação
+
+```bash
+pip install git+https://github.com/dankkom/inmet-bdmep-data.git
 ```
-usage: fetch.py [-h] -data-dir DESTDIR years [years ...]
 
-Download INMET BDMEP data
+---
 
-positional arguments:
-  years               Years to download
+## 🛠️ CLI
 
-options:
-  -h, --help          show this help message and exit
-  --data-dir DESTDIR  Destination directory (default: None)
+O pacote instala o comando `inmet` com três subcomandos.
+
+### `inmet fetch` — Baixar dados
+
+```bash
+# Um ano
+inmet fetch 2023 --data-dir ./dados
+
+# Intervalo de anos
+inmet fetch 2018:2023 --data-dir ./dados
+
+# Múltiplos anos/intervalos, 8 downloads paralelos
+inmet fetch 2010 2015 2020:2023 --data-dir ./dados --workers 8
 ```
 
-## reader
+### `inmet read` — Ler e exportar
 
-Module to read INMET's BDMEP raw data files.
+```bash
+# Exportar tudo em Parquet
+inmet read --data-dir ./dados --output dados.parquet
 
-Example:
+# Filtrar por UF e ano, exportar CSV
+inmet read --data-dir ./dados --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+
+# Filtrar por estação e período
+inmet read --data-dir ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+
+# Usar polars como engine
+inmet read --data-dir ./dados --uf MG --output mg.parquet --engine polars
+```
+
+### `inmet stations` — Catálogo de estações
+
+```bash
+# Listar todas as estações
+inmet stations --data-dir ./dados --output estacoes.csv
+```
+
+---
+
+## 🐍 API Python
 
 ```python
-from inmet_bdmep.reader import read_zipfile
+import inmet_bdmep as inmet
+from pathlib import Path
 
-filepath = "inmet-bdmep_2022_20220712.zip"
-df = read_zipfile(filepath)
-# 100%|██████████████████████████████████████| 573/573 [01:06<00:00,  8.65it/s]
-print(df)
-#      hora  precipitacao  pressao_atmosferica  pressao_atmosferica_maxima  pressao_atmosferica_minima  ...  codigo_wmo   latitude  longitude  altitude  data_fundacao
-#0        0           0.0                902.9                       902.9                       902.1  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#1        1           0.0                903.4                       903.4                       902.9  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#2        2           0.0                903.7                       903.7                       903.3  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#3        3           0.0                903.4                       903.7                       903.4  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#4        4           0.0                903.2                       903.4                       903.1  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#...    ...           ...                  ...                         ...                         ...  ...         ...        ...        ...       ...            ...
-#4339    19           0.0                910.3                       910.5                       910.3  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#4340    20           0.0                910.2                       910.4                       910.1  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#4341    21           0.0                910.3                       910.3                       910.1  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#4342    22           0.0                910.4                       910.4                       910.1  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#4343    23           0.0                910.6                       910.7                       910.4  ...        A898 -27.388611 -51.215833     963.0     2019-02-15
-#
-#[4327 rows x 29 columns]
+data_dir = Path("./dados")
+
+# Baixar anos com 4 workers
+inmet.fetch([2020, 2021, 2022, 2023], data_dir, workers=4)
+
+# Ler com filtros
+df = inmet.read(
+    data_dir,
+    years=[2022, 2023],
+    uf=["SP", "RJ", "MG"],
+    start="2022-06-01",
+    end="2023-05-31",
+)
+
+# Temperatura média por estado
+print(df.groupby("uf")["temperatura_ar"].mean())
+
+# Catálogo de estações
+estacoes = inmet.read_stations(data_dir)
+print(estacoes[["codigo_wmo", "estacao", "uf", "latitude", "longitude"]])
 ```
+
+---
+
+## 📊 Colunas Disponíveis
+
+| Coluna | Descrição |
+| :--- | :--- |
+| `data_hora` | Data e hora (Timestamp) |
+| `precipitacao` | Precipitação Total (mm) |
+| `pressao_atmosferica` | Pressão ao Nível da Estação (mB) |
+| `pressao_atmosferica_maxima` | Pressão Máxima (mB) |
+| `pressao_atmosferica_minima` | Pressão Mínima (mB) |
+| `radiacao` | Radiação Global (kJ/m²) |
+| `temperatura_ar` | Temperatura Bulbo Seco (°C) |
+| `temperatura_orvalho` | Temperatura Ponto de Orvalho (°C) |
+| `temperatura_maxima` | Temperatura Máxima (°C) |
+| `temperatura_minima` | Temperatura Mínima (°C) |
+| `umidade_relativa` | Umidade Relativa do Ar (%) |
+| `vento_velocidade` | Velocidade do Vento (m/s) |
+| `vento_rajada` | Rajada Máxima (m/s) |
+| `vento_direcao` | Direção do Vento (°) |
+| `estacao` | Nome da Estação |
+| `codigo_wmo` | Código WMO da Estação |
+| `uf` | Unidade Federativa |
+| `latitude` / `longitude` | Coordenadas geográficas |
+| `altitude` | Altitude (m) |
+
+---
+
+## 📖 Fonte de Dados
+
+Dados obtidos do portal do **Instituto Nacional de Meteorologia (INMET)**: [https://portal.inmet.gov.br/dadoshistoricos](https://portal.inmet.gov.br/dadoshistoricos)
+
+> Use e atribua crédito ao INMET em pesquisas e aplicações.
+
+---
+
+## 📄 Licença
+
+[MIT](LICENSE)
