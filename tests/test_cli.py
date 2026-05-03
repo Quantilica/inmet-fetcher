@@ -1,4 +1,5 @@
 """Integration tests for CLI subcommands via main_cli()."""
+
 import sys
 from unittest.mock import patch
 
@@ -7,7 +8,7 @@ import pandas as pd
 import pytest
 
 from inmet_bdmep import main_cli
-from tests.conftest import make_zip_bytes, DEFAULT_DATA_ROWS
+from tests.conftest import DEFAULT_DATA_ROWS, make_zip_bytes
 
 FAKE_LAST_MODIFIED = "Mon, 01 Jan 2024 00:00:00 GMT"
 FAKE_CONTENT = b"PK" + b"\x00" * 200
@@ -65,21 +66,45 @@ class TestFetchCLI:
 class TestReadCLI:
     def test_read_outputs_parquet(self, tmp_path, sample_zip_path):
         output = tmp_path / "out.parquet"
-        cli("read", "--data-dir", sample_zip_path.parent, "--output", output, "--format", "parquet")
+        cli(
+            "read",
+            "--data-dir",
+            sample_zip_path.parent,
+            "--output",
+            output,
+            "--format",
+            "parquet",
+        )
         assert output.exists()
         df = pd.read_parquet(output)
         assert len(df) > 0
 
     def test_read_outputs_csv(self, tmp_path, sample_zip_path):
         output = tmp_path / "out.csv"
-        cli("read", "--data-dir", sample_zip_path.parent, "--output", output, "--format", "csv")
+        cli(
+            "read",
+            "--data-dir",
+            sample_zip_path.parent,
+            "--output",
+            output,
+            "--format",
+            "csv",
+        )
         assert output.exists()
         df = pd.read_csv(output)
         assert len(df) > 0
 
     def test_read_outputs_json(self, tmp_path, sample_zip_path):
         output = tmp_path / "out.json"
-        cli("read", "--data-dir", sample_zip_path.parent, "--output", output, "--format", "json")
+        cli(
+            "read",
+            "--data-dir",
+            sample_zip_path.parent,
+            "--output",
+            output,
+            "--format",
+            "json",
+        )
         assert output.exists()
 
     def test_read_filter_uf(self, tmp_path, multi_station_zip_bytes):
@@ -102,10 +127,14 @@ class TestReadCLI:
         output = tmp_path / "out.parquet"
         cli(
             "read",
-            "--data-dir", sample_zip_path.parent,
-            "--start", "2023-01-02",
-            "--end", "2023-01-02",
-            "--output", output,
+            "--data-dir",
+            sample_zip_path.parent,
+            "--start",
+            "2023-01-02",
+            "--end",
+            "2023-01-02",
+            "--output",
+            output,
         )
         df = pd.read_parquet(output)
         assert all(df["data_hora"] >= pd.Timestamp("2023-01-02"))
@@ -137,13 +166,23 @@ class TestStationsCLI:
 
     def test_stations_outputs_parquet(self, tmp_path, sample_zip_path):
         output = tmp_path / "stations.parquet"
-        cli("stations", "--data-dir", sample_zip_path.parent, "--output", output, "--format", "parquet")
+        cli(
+            "stations",
+            "--data-dir",
+            sample_zip_path.parent,
+            "--output",
+            output,
+            "--format",
+            "parquet",
+        )
         assert output.exists()
         df = pd.read_parquet(output)
         assert "codigo_wmo" in df.columns
 
     def test_stations_multiple(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(multi_station_zip_bytes)
+        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
+            multi_station_zip_bytes
+        )
         output = tmp_path / "stations.csv"
         cli("stations", "--data-dir", tmp_path, "--output", output)
         df = pd.read_csv(output)

@@ -1,4 +1,5 @@
 """Tests for read_metadata, read_station_data, read_zipfile, find_zipfiles, read, read_stations."""
+
 import datetime as dt
 import io
 import zipfile
@@ -22,7 +23,6 @@ from tests.conftest import (
     make_station_csv,
     make_zip_bytes,
 )
-
 
 # ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,9 @@ class TestReadStationData:
         assert df["precipitacao"].iloc[1] == pytest.approx(0.2)
 
     def test_na_values_parsed(self):
-        rows = ["2023-01-01;0000 UTC;-9999;1013,2;1013,5;1012,8;100,0;-9999;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"]
+        rows = [
+            "2023-01-01;0000 UTC;-9999;1013,2;1013,5;1012,8;100,0;-9999;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"
+        ]
         df = read_station_data(self._make_file(data_rows=rows))
         assert np.isnan(df["precipitacao"].iloc[0])
         assert np.isnan(df["temperatura_ar"].iloc[0])
@@ -142,7 +144,9 @@ class TestReadStationData:
         assert len(df) == len(DEFAULT_DATA_ROWS)
 
     def test_slash_date_format(self):
-        rows = ["2023/01/01;00:00;0,0;1013,2;1013,5;1012,8;100,0;28,5;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"]
+        rows = [
+            "2023/01/01;00:00;0,0;1013,2;1013,5;1012,8;100,0;28,5;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"
+        ]
         df = read_station_data(self._make_file(data_rows=rows))
         assert df["data_hora"].iloc[0] == pd.Timestamp("2023-01-01 00:00")
 
@@ -203,7 +207,9 @@ class TestReadZipfile:
         assert all(df["data_hora"] <= pd.Timestamp("2023-01-01"))
 
     def test_filter_date_range(self, sample_zip_path):
-        df = read_zipfile(sample_zip_path, start="2023-01-01 01:00", end="2023-01-01 01:00")
+        df = read_zipfile(
+            sample_zip_path, start="2023-01-01 01:00", end="2023-01-01 01:00"
+        )
         assert len(df) == 1
         assert df["data_hora"].iloc[0] == pd.Timestamp("2023-01-01 01:00")
 
@@ -211,7 +217,9 @@ class TestReadZipfile:
         df = read_zipfile(sample_zip_path, start="2025-01-01")
         assert len(df) == 0
 
-    def test_all_stations_loaded_without_filter(self, tmp_path, multi_station_zip_bytes):
+    def test_all_stations_loaded_without_filter(
+        self, tmp_path, multi_station_zip_bytes
+    ):
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
         path.write_bytes(multi_station_zip_bytes)
         df = read_zipfile(path)
@@ -275,12 +283,16 @@ class TestRead:
         assert len(df) == len(DEFAULT_DATA_ROWS)
 
     def test_uf_filter(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(multi_station_zip_bytes)
+        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
+            multi_station_zip_bytes
+        )
         df = read(tmp_path, uf=["SP"])
         assert set(df["uf"].unique()) == {"SP"}
 
     def test_station_filter(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(multi_station_zip_bytes)
+        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
+            multi_station_zip_bytes
+        )
         df = read(tmp_path, station=["C001"])
         assert set(df["codigo_wmo"].unique()) == {"C001"}
 
@@ -304,6 +316,7 @@ class TestRead:
 
     def test_polars_not_installed_raises(self, sample_zip_path, monkeypatch):
         import builtins
+
         real_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -343,12 +356,16 @@ class TestReadStations:
         assert len(df[df["codigo_wmo"] == "A001"]) == 1
 
     def test_multiple_stations(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(multi_station_zip_bytes)
+        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
+            multi_station_zip_bytes
+        )
         df = read_stations(tmp_path)
         assert set(df["codigo_wmo"].tolist()) == {"A001", "B001", "C001"}
 
     def test_sorted_by_codigo_wmo(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(multi_station_zip_bytes)
+        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
+            multi_station_zip_bytes
+        )
         df = read_stations(tmp_path)
         codes = df["codigo_wmo"].tolist()
         assert codes == sorted(codes)

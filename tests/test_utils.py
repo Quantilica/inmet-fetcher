@@ -1,4 +1,5 @@
 """Unit tests for pure utility functions."""
+
 import datetime as dt
 
 import numpy as np

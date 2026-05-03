@@ -1,4 +1,5 @@
 """Tests for download_year and fetch using pytest-httpx."""
+
 import datetime as dt
 import io
 import zipfile

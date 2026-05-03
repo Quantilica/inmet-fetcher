@@ -100,9 +100,18 @@ def sample_zip_bytes():
 @pytest.fixture
 def multi_station_zip_bytes():
     return make_zip_bytes(
-        ("INMET_N_AM_A001_EstacaoAM_01-01-2023_A_01-01-2024.CSV", {"uf": "AM", "codigo_wmo": "A001"}),
-        ("INMET_SE_SP_B001_EstacaoSP_01-01-2023_A_01-01-2024.CSV", {"uf": "SP", "codigo_wmo": "B001", "regiao": "Sudeste"}),
-        ("INMET_SE_RJ_C001_EstacaoRJ_01-01-2023_A_01-01-2024.CSV", {"uf": "RJ", "codigo_wmo": "C001", "regiao": "Sudeste"}),
+        (
+            "INMET_N_AM_A001_EstacaoAM_01-01-2023_A_01-01-2024.CSV",
+            {"uf": "AM", "codigo_wmo": "A001"},
+        ),
+        (
+            "INMET_SE_SP_B001_EstacaoSP_01-01-2023_A_01-01-2024.CSV",
+            {"uf": "SP", "codigo_wmo": "B001", "regiao": "Sudeste"},
+        ),
+        (
+            "INMET_SE_RJ_C001_EstacaoRJ_01-01-2023_A_01-01-2024.CSV",
+            {"uf": "RJ", "codigo_wmo": "C001", "regiao": "Sudeste"},
+        ),
     )
 
 
