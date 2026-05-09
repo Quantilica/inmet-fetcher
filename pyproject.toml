@@ -17,8 +17,8 @@ dependencies = [
 inmet = "inmet_bdmep:main_cli"
 
 [project.urls]
-Homepage = "https://github.com/dankkom/inmet-bdmep-data"
-Issues = "https://github.com/dankkom/inmet-bdmep-data/issues"
+Homepage = "https://github.com/Quantilica/inmet-bdmep-data"
+Issues = "https://github.com/Quantilica/inmet-bdmep-data/issues"
 
 [build-system]
 requires = ["hatchling"]
