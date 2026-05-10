@@ -5,14 +5,16 @@ import datetime as dt
 import numpy as np
 import pytest
 
-from inmet_bdmep import (
+from inmet_bdmep.fetch import (
     _build_filename,
     _build_url,
+    _parse_last_modified,
+    expand_years,
+)
+from inmet_bdmep.reader import (
     _fix_hora,
     _parse_float,
-    _parse_last_modified,
     _rename_col,
-    expand_years,
 )
 
 

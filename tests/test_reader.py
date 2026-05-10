@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from inmet_bdmep import (
+from inmet_bdmep.reader import (
     find_zipfiles,
     read,
     read_metadata,

@@ -2,39 +2,63 @@
 name = "inmet-bdmep-data"
 version = "0.2.0"
 description = "Coletor de dados meteorológicos do INMET-BDMEP"
+readme = "README.md"
 authors = [
-    {name = "Komesu, D.K.", email="daniel@dkko.me"},
+    { name = "Komesu, D.K.", email = "daniel@dkko.me" },
 ]
-requires-python = ">=3.10"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+keywords = [
+    "inmet",
+    "bdmep",
+    "weather",
+    "meteorology",
+    "brazil",
+    "open-data",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
 dependencies = [
-    "tqdm",
-    "httpx",
     "pandas",
     "pyarrow",
+    "quantilica-core",
+    "tqdm",
 ]
-
-[project.scripts]
-inmet = "inmet_bdmep:main_cli"
 
 [project.urls]
 Homepage = "https://github.com/Quantilica/inmet-bdmep-data"
+Repository = "https://github.com/Quantilica/inmet-bdmep-data"
 Issues = "https://github.com/Quantilica/inmet-bdmep-data/issues"
+
+[project.scripts]
+inmet = "inmet_bdmep.cli:main_cli"
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9.0",
+    "pytest>=8.0.0",
+    "pytest-httpx>=0.36.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inmet_bdmep"]
+
+[tool.ruff]
+line-length = 79
+lint.select = ["E", "F", "I", "UP", "B"]
+
+[tool.uv.sources]
+quantilica-core = { path = "../quantilica-core", editable = true }
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/inmet_bdmep.py"]
-
-[dependency-groups]
-dev = [
-    "pytest>=9.0.3",
-    "pytest-httpx>=0.36.2",
-]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]

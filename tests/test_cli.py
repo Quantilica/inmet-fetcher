@@ -7,7 +7,8 @@ import httpx
 import pandas as pd
 import pytest
 
-from inmet_bdmep import main_cli
+from inmet_bdmep.cli import main_cli
+from inmet_bdmep.storage import InmetRepository
 from tests.conftest import DEFAULT_DATA_ROWS, make_zip_bytes
 
 FAKE_LAST_MODIFIED = "Mon, 01 Jan 2024 00:00:00 GMT"
@@ -21,7 +22,7 @@ def cli(*args):
 
 class TestFetchCLI:
     def test_fetch_downloads_file(self, tmp_path, httpx_mock):
-        from inmet_bdmep import _build_url
+        from inmet_bdmep.fetch import _build_url
 
         httpx_mock.add_response(
             method="HEAD",
@@ -38,10 +39,11 @@ class TestFetchCLI:
         )
 
         cli("fetch", "2023", "--data-dir", tmp_path)
-        assert any(tmp_path.glob("inmet-bdmep_2023_*.zip"))
+        repo = InmetRepository(tmp_path)
+        assert repo.path_for_year(2023, "2023.zip").exists()
 
     def test_fetch_workers_flag(self, tmp_path, httpx_mock):
-        from inmet_bdmep import _build_url
+        from inmet_bdmep.fetch import _build_url
 
         for year in [2022, 2023]:
             httpx_mock.add_response(
@@ -59,8 +61,9 @@ class TestFetchCLI:
             )
 
         cli("fetch", "2022:2023", "--data-dir", tmp_path, "--workers", "2")
-        zips = list(tmp_path.glob("inmet-bdmep_*.zip"))
-        assert len(zips) == 2
+        repo = InmetRepository(tmp_path)
+        assert repo.path_for_year(2022, "2022.zip").exists()
+        assert repo.path_for_year(2023, "2023.zip").exists()
 
 
 class TestReadCLI:
