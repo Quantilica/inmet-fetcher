@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-O **inmet-bdmep-data** é uma ferramenta para desenvolvedores, cientistas e analistas de dados brasileiros que precisam acessar o **BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa)** do INMET.
+O **inmet-fetcher** é uma ferramenta para desenvolvedores, cientistas e analistas de dados brasileiros que precisam acessar o **BDMEP (Banco de Dados Meteorológicos para Ensino e Pesquisa)** do INMET.
 
 Esqueça o trabalho braçal de baixar dezenas de arquivos ZIP manualmente, lidar com codificações `latin-1`, limpar cabeçalhos inconsistentes e padronizar nomes de colunas. Este pacote faz o trabalho sujo.
 
@@ -24,7 +24,7 @@ Esqueça o trabalho braçal de baixar dezenas de arquivos ZIP manualmente, lidar
 ## 🚀 Instalação
 
 ```bash
-pip install git+https://github.com/dankkom/inmet-bdmep-data.git
+pip install git+https://github.com/Quantilica/inmet-fetcher.git
 ```
 
 ---
@@ -33,40 +33,40 @@ pip install git+https://github.com/dankkom/inmet-bdmep-data.git
 
 O pacote instala o comando `inmet` com três subcomandos.
 
-### `inmet fetch` — Baixar dados
+### `inmet-fetcher fetch` — Baixar dados
 
 ```bash
 # Um ano
-inmet fetch 2023 --data-dir ./dados
+inmet-fetcher fetch 2023 --data-dir ./dados
 
 # Intervalo de anos
-inmet fetch 2018:2023 --data-dir ./dados
+inmet-fetcher fetch 2018:2023 --data-dir ./dados
 
 # Múltiplos anos/intervalos, 8 downloads paralelos
-inmet fetch 2010 2015 2020:2023 --data-dir ./dados --workers 8
+inmet-fetcher fetch 2010 2015 2020:2023 --data-dir ./dados --workers 8
 ```
 
-### `inmet read` — Ler e exportar
+### `inmet-fetcher read` — Ler e exportar
 
 ```bash
 # Exportar tudo em Parquet
-inmet read --data-dir ./dados --output dados.parquet
+inmet-fetcher read --data-dir ./dados --output dados.parquet
 
 # Filtrar por UF e ano, exportar CSV
-inmet read --data-dir ./dados --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+inmet-fetcher read --data-dir ./dados --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
 
 # Filtrar por estação e período
-inmet read --data-dir ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+inmet-fetcher read --data-dir ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
 
 # Usar polars como engine
-inmet read --data-dir ./dados --uf MG --output mg.parquet --engine polars
+inmet-fetcher read --data-dir ./dados --uf MG --output mg.parquet --engine polars
 ```
 
-### `inmet stations` — Catálogo de estações
+### `inmet-fetcher stations` — Catálogo de estações
 
 ```bash
 # Listar todas as estações
-inmet stations --data-dir ./dados --output estacoes.csv
+inmet-fetcher stations --data-dir ./dados --output estacoes.csv
 ```
 
 ---
@@ -74,7 +74,7 @@ inmet stations --data-dir ./dados --output estacoes.csv
 ## 🐍 API Python
 
 ```python
-import inmet_bdmep as inmet
+import inmet_fetcher as inmet
 from pathlib import Path
 
 data_dir = Path("./dados")

@@ -58,7 +58,7 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
             target_path,
             source_id="inmet",
             dataset_id="bdmep",
-            producer="inmet-bdmep-data",
+            producer="inmet-fetcher",
         )
     except Exception as exc:
         logger.error(f"Failed to download year {year}: {exc}")

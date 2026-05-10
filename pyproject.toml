@@ -1,5 +1,5 @@
 [project]
-name = "inmet-bdmep-data"
+name = "inmet-fetcher"
 version = "0.2.0"
 description = "Coletor de dados meteorológicos do INMET-BDMEP"
 readme = "README.md"
@@ -35,12 +35,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Quantilica/inmet-bdmep-data"
-Repository = "https://github.com/Quantilica/inmet-bdmep-data"
-Issues = "https://github.com/Quantilica/inmet-bdmep-data/issues"
+Homepage = "https://github.com/Quantilica/inmet-fetcher"
+Repository = "https://github.com/Quantilica/inmet-fetcher"
+Issues = "https://github.com/Quantilica/inmet-fetcher/issues"
 
 [project.scripts]
-inmet = "inmet_bdmep.cli:main_cli"
+inmet-fetcher = "inmet_fetcher.cli:main_cli"
 
 [project.optional-dependencies]
 dev = [
@@ -50,7 +50,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/inmet_bdmep"]
+packages = ["src/inmet_fetcher"]
 
 [tool.ruff]
 line-length = 79

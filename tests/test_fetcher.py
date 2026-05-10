@@ -7,12 +7,12 @@ import zipfile
 import httpx
 import pytest
 
-from inmet_bdmep.fetch import _build_filename, _build_url, download_year, fetch
-from inmet_bdmep.storage import InmetRepository
+from inmet_fetcher.fetch import _build_filename, _build_url, download_year, fetch
+from inmet_fetcher.storage import InmetRepository
 
 @pytest.fixture(autouse=True)
 def fast_client(monkeypatch):
-    from inmet_bdmep.fetch import client
+    from inmet_fetcher.fetch import client
     monkeypatch.setattr(client, "attempts", 1)
     monkeypatch.setattr(client, "retry_base_delay", 0)
 
