@@ -30,7 +30,7 @@ classifiers = [
 dependencies = [
     "pandas",
     "pyarrow",
-    "quantilica-core",
+    "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git",
     "tqdm",
 ]
 
@@ -56,8 +56,8 @@ packages = ["src/inmet_bdmep"]
 line-length = 79
 lint.select = ["E", "F", "I", "UP", "B"]
 
-[tool.uv.sources]
-quantilica-core = { path = "../quantilica-core", editable = true }
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [build-system]
 requires = ["hatchling"]
