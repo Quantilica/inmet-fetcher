@@ -9,6 +9,7 @@ from pathlib import Path
 from quantilica_core.http import HttpClient
 from quantilica_core.logging import get_logger
 import quantilica_core.metadata as core_meta
+from quantilica_core.storage import stamp_filename
 
 from .storage import InmetRepository
 
@@ -36,22 +37,23 @@ def build_url(year: int) -> str:
 _build_url = build_url
 
 
-def _build_filename(year: int, last_modified: dt.datetime) -> str:
-    return f"inmet-bdmep_{year}_{last_modified:%Y%m%d}.zip"
-
-
-def _parse_last_modified(last_modified_str: str) -> dt.datetime:
-    """Parse HTTP Last-Modified header string into datetime."""
-    return dt.datetime.strptime(last_modified_str, "%a, %d %b %Y %H:%M:%S %Z")
+def _safe_head_date(url: str) -> dt.date | None:
+    """Return the Last-Modified date from a HEAD request, or None on failure."""
+    try:
+        meta = client.head_metadata(url)
+        lm = meta.get("last_modified")
+        return lm.date() if lm else None
+    except Exception as e:
+        logger.warning(f"Could not fetch metadata for {url}: {e}")
+        return None
 
 
 def download_year(year: int, repo: InmetRepository) -> Path | None:
     """Download a single year's ZIP file using quantilica-core."""
     url = build_url(year)
-    # Since we don't know the exact filename until we see the response or have an existing one,
-    # we use a consistent name for the raw storage.
-    target_path = repo.path_for_year(year, f"{year}.zip")
-    
+    date = _safe_head_date(url)
+    filename = stamp_filename(f"inmet-bdmep_{year}", "zip", date)
+    target_path = repo.path_for_year(year, filename)
     try:
         return client.download_with_manifest(
             url,

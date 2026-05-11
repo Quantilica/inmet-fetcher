@@ -164,14 +164,13 @@ def find_zipfiles(data_dir: Path, years: list[int] | None = None) -> list[Path]:
     zips = []
     if years:
         for year in years:
-            # Check new structure
-            path = repo.path_for_year(year, f"{year}.zip")
-            if path.exists():
-                zips.append(path)
+            # Check new structure: any ZIP in the year directory
+            year_dir = repo.raw_path("bdmep", str(year))
+            if year_dir.exists():
+                zips.extend(sorted(year_dir.glob("*.zip")))
             else:
-                # Check legacy flat structure
-                legacy_zips = sorted(data_dir.glob(f"inmet-bdmep_{year}_*.zip"))
-                zips.extend(legacy_zips)
+                # Legacy flat structure (old underscore-separator names)
+                zips.extend(sorted(data_dir.glob(f"inmet-bdmep_{year}_*.zip")))
     else:
         # Search everywhere under raw/bdmep
         zips = sorted(data_dir.rglob("raw/bdmep/**/*.zip"))

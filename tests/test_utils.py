@@ -1,14 +1,10 @@
 """Unit tests for pure utility functions."""
 
-import datetime as dt
-
 import numpy as np
 import pytest
 
 from inmet_fetcher.fetch import (
-    _build_filename,
     _build_url,
-    _parse_last_modified,
     expand_years,
 )
 from inmet_fetcher.reader import (
@@ -48,27 +44,6 @@ class TestBuildUrl:
         assert "2000" in _build_url(2000)
         assert "1999" in _build_url(1999)
 
-
-class TestParseLastModified:
-    def test_standard_gmt(self):
-        result = _parse_last_modified("Mon, 01 Jan 2024 00:00:00 GMT")
-        assert result == dt.datetime(2024, 1, 1, 0, 0, 0)
-
-    def test_different_date(self):
-        result = _parse_last_modified("Fri, 15 Mar 2019 12:30:45 GMT")
-        assert result == dt.datetime(2019, 3, 15, 12, 30, 45)
-
-
-class TestBuildFilename:
-    def test_format(self):
-        lm = dt.datetime(2024, 1, 15)
-        assert _build_filename(2023, lm) == "inmet-bdmep_2023_20240115.zip"
-
-    def test_year_in_name(self):
-        lm = dt.datetime(2020, 6, 1)
-        name = _build_filename(2019, lm)
-        assert name.startswith("inmet-bdmep_2019_")
-        assert name.endswith(".zip")
 
 
 class TestRenameCol:
