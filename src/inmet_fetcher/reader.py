@@ -159,25 +159,20 @@ def read_zipfile(
 
 
 def find_zipfiles(data_dir: Path, years: list[int] | None = None) -> list[Path]:
-    # We now look into the new repository structure if it exists, or the old one for compatibility
+    """Locate INMET BDMEP ZIPs under ``bdmep/{year}/*.zip`` (Padrão B)."""
     repo = InmetRepository(data_dir)
-    zips = []
+    zips: list[Path] = []
     if years:
         for year in years:
-            # Check new structure: any ZIP in the year directory
-            year_dir = repo.raw_path("bdmep", str(year))
+            year_dir = repo.dataset_path("bdmep", str(year))
             if year_dir.exists():
                 zips.extend(sorted(year_dir.glob("*.zip")))
-            else:
-                # Legacy flat structure (old underscore-separator names)
-                zips.extend(sorted(data_dir.glob(f"inmet-bdmep_{year}_*.zip")))
     else:
-        # Search everywhere under raw/bdmep
-        zips = sorted(data_dir.rglob("raw/bdmep/**/*.zip"))
-        # And legacy
-        zips.extend(sorted(data_dir.glob("inmet-bdmep_*.zip")))
-    
-    return sorted(list(set(zips)))
+        bdmep_root = repo.dataset_path("bdmep")
+        if bdmep_root.exists():
+            zips.extend(sorted(bdmep_root.rglob("*.zip")))
+
+    return sorted(set(zips))
 
 
 def read(

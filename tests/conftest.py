@@ -117,7 +117,9 @@ def multi_station_zip_bytes():
 
 @pytest.fixture
 def sample_zip_path(tmp_path, sample_zip_bytes):
-    path = tmp_path / "inmet-bdmep_2023_20240101.zip"
+    year_dir = tmp_path / "bdmep" / "2023"
+    year_dir.mkdir(parents=True, exist_ok=True)
+    path = year_dir / "inmet-bdmep_2023@20240101.zip"
     path.write_bytes(sample_zip_bytes)
     return path
 
@@ -125,7 +127,9 @@ def sample_zip_path(tmp_path, sample_zip_bytes):
 @pytest.fixture
 def multi_year_data_dir(tmp_path, make_zip):
     for year in [2021, 2022, 2023]:
-        path = tmp_path / f"inmet-bdmep_{year}_20240101.zip"
+        year_dir = tmp_path / "bdmep" / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
+        path = year_dir / f"inmet-bdmep_{year}@20240101.zip"
         path.write_bytes(
             make_zip_bytes(
                 (f"INMET_N_AM_A001_EstacaoTeste_{year}.CSV", {"codigo_wmo": "A001"}),

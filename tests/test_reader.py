@@ -230,17 +230,23 @@ class TestReadZipfile:
 
 
 class TestFindZipfiles:
+    @staticmethod
+    def _make_zip(tmp_path, year: int, stamp: str = "20240101") -> None:
+        year_dir = tmp_path / "bdmep" / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
+        (year_dir / f"inmet-bdmep_{year}@{stamp}.zip").touch()
+
     def test_empty_dir(self, tmp_path):
         assert find_zipfiles(tmp_path) == []
 
     def test_finds_matching_files(self, tmp_path):
-        (tmp_path / "inmet-bdmep_2022_20230101.zip").touch()
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").touch()
+        self._make_zip(tmp_path, 2022, "20230101")
+        self._make_zip(tmp_path, 2023, "20240101")
         result = find_zipfiles(tmp_path)
         assert len(result) == 2
 
     def test_ignores_non_matching_files(self, tmp_path):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").touch()
+        self._make_zip(tmp_path, 2023)
         (tmp_path / "other_file.zip").touch()
         (tmp_path / "readme.txt").touch()
         result = find_zipfiles(tmp_path)
@@ -248,14 +254,14 @@ class TestFindZipfiles:
 
     def test_year_filter(self, tmp_path):
         for year in [2020, 2021, 2022, 2023]:
-            (tmp_path / f"inmet-bdmep_{year}_20240101.zip").touch()
+            self._make_zip(tmp_path, year)
         result = find_zipfiles(tmp_path, years=[2021, 2023])
-        years_found = {int(p.name.split("_")[1]) for p in result}
+        years_found = {int(p.parent.name) for p in result}
         assert years_found == {2021, 2023}
 
     def test_returns_sorted(self, tmp_path):
         for year in [2023, 2021, 2022]:
-            (tmp_path / f"inmet-bdmep_{year}_20240101.zip").touch()
+            self._make_zip(tmp_path, year)
         result = find_zipfiles(tmp_path)
         names = [p.name for p in result]
         assert names == sorted(names)
@@ -269,52 +275,57 @@ class TestRead:
         with pytest.raises(FileNotFoundError):
             read(tmp_path)
 
-    def test_basic_read(self, sample_zip_path):
-        df = read(sample_zip_path.parent)
+    def test_basic_read(self, tmp_path, sample_zip_path):
+        df = read(tmp_path)
         assert isinstance(df, pd.DataFrame)
         assert len(df) > 0
 
+    def _write_zip(self, tmp_path, year: int, zip_bytes: bytes) -> None:
+        year_dir = tmp_path / "bdmep" / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
+        (year_dir / f"inmet-bdmep_{year}@20240101.zip").write_bytes(zip_bytes)
+
     def test_year_filter(self, tmp_path, make_zip):
         for year in [2021, 2022, 2023]:
-            (tmp_path / f"inmet-bdmep_{year}_20240101.zip").write_bytes(
-                make_zip((f"A001_{year}.CSV", {"codigo_wmo": "A001"}))
+            self._write_zip(
+                tmp_path,
+                year,
+                make_zip((f"A001_{year}.CSV", {"codigo_wmo": "A001"})),
             )
         df = read(tmp_path, years=[2022])
         assert len(df) == len(DEFAULT_DATA_ROWS)
 
     def test_uf_filter(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
-            multi_station_zip_bytes
-        )
+        self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read(tmp_path, uf=["SP"])
         assert set(df["uf"].unique()) == {"SP"}
 
     def test_station_filter(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
-            multi_station_zip_bytes
-        )
+        self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read(tmp_path, station=["C001"])
         assert set(df["codigo_wmo"].unique()) == {"C001"}
 
-    def test_date_filter(self, sample_zip_path):
-        df = read(sample_zip_path.parent, start="2023-01-02", end="2023-01-02")
+    def test_date_filter(self, tmp_path, sample_zip_path):
+        df = read(tmp_path, start="2023-01-02", end="2023-01-02")
         assert all(df["data_hora"] >= pd.Timestamp("2023-01-02"))
         assert all(df["data_hora"] <= pd.Timestamp("2023-01-02 23:59"))
 
     def test_multi_year_concat(self, tmp_path, make_zip):
         for year in [2021, 2022]:
-            (tmp_path / f"inmet-bdmep_{year}_20240101.zip").write_bytes(
-                make_zip((f"A001_{year}.CSV", {"codigo_wmo": "A001"}))
+            self._write_zip(
+                tmp_path,
+                year,
+                make_zip((f"A001_{year}.CSV", {"codigo_wmo": "A001"})),
             )
         df = read(tmp_path)
         assert len(df) == 2 * len(DEFAULT_DATA_ROWS)
 
-    def test_polars_engine(self, sample_zip_path):
+    def test_polars_engine(self, tmp_path, sample_zip_path):
         polars = pytest.importorskip("polars")
-        df = read(sample_zip_path.parent, engine="polars")
+        df = read(tmp_path, engine="polars")
         assert isinstance(df, polars.DataFrame)
 
-    def test_polars_not_installed_raises(self, sample_zip_path, monkeypatch):
+    def test_polars_not_installed_raises(self, tmp_path, sample_zip_path, monkeypatch):
         import builtins
 
         real_import = builtins.__import__
@@ -326,56 +337,61 @@ class TestRead:
 
         monkeypatch.setattr(builtins, "__import__", mock_import)
         with pytest.raises(ImportError, match="polars"):
-            read(sample_zip_path.parent, engine="polars")
+            read(tmp_path, engine="polars")
 
 
 # ─── read_stations ──────────────────────────────────────────────────────────
 
 
 class TestReadStations:
+    @staticmethod
+    def _write_zip(tmp_path, year: int, zip_bytes: bytes) -> None:
+        year_dir = tmp_path / "bdmep" / str(year)
+        year_dir.mkdir(parents=True, exist_ok=True)
+        (year_dir / f"inmet-bdmep_{year}@20240101.zip").write_bytes(zip_bytes)
+
     def test_raises_when_no_zips(self, tmp_path):
         with pytest.raises(FileNotFoundError):
             read_stations(tmp_path)
 
-    def test_returns_dataframe(self, sample_zip_path):
-        df = read_stations(sample_zip_path.parent)
+    def test_returns_dataframe(self, tmp_path, sample_zip_path):
+        df = read_stations(tmp_path)
         assert isinstance(df, pd.DataFrame)
 
-    def test_expected_columns(self, sample_zip_path):
-        df = read_stations(sample_zip_path.parent)
+    def test_expected_columns(self, tmp_path, sample_zip_path):
+        df = read_stations(tmp_path)
         for col in ["codigo_wmo", "uf", "estacao", "latitude", "longitude", "altitude"]:
             assert col in df.columns
 
     def test_deduplication(self, tmp_path, make_zip):
-        # Two ZIPs with the same station — should appear once
         for year in [2022, 2023]:
-            (tmp_path / f"inmet-bdmep_{year}_20240101.zip").write_bytes(
-                make_zip(("A001.CSV", {"codigo_wmo": "A001"}))
+            self._write_zip(
+                tmp_path, year, make_zip(("A001.CSV", {"codigo_wmo": "A001"}))
             )
         df = read_stations(tmp_path)
         assert len(df[df["codigo_wmo"] == "A001"]) == 1
 
     def test_multiple_stations(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
-            multi_station_zip_bytes
-        )
+        self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read_stations(tmp_path)
         assert set(df["codigo_wmo"].tolist()) == {"A001", "B001", "C001"}
 
     def test_sorted_by_codigo_wmo(self, tmp_path, multi_station_zip_bytes):
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
-            multi_station_zip_bytes
-        )
+        self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read_stations(tmp_path)
         codes = df["codigo_wmo"].tolist()
         assert codes == sorted(codes)
 
     def test_year_filter(self, tmp_path, make_zip):
-        (tmp_path / "inmet-bdmep_2022_20240101.zip").write_bytes(
-            make_zip(("A001.CSV", {"codigo_wmo": "A001", "uf": "AM"}))
+        self._write_zip(
+            tmp_path,
+            2022,
+            make_zip(("A001.CSV", {"codigo_wmo": "A001", "uf": "AM"})),
         )
-        (tmp_path / "inmet-bdmep_2023_20240101.zip").write_bytes(
-            make_zip(("B001.CSV", {"codigo_wmo": "B001", "uf": "SP"}))
+        self._write_zip(
+            tmp_path,
+            2023,
+            make_zip(("B001.CSV", {"codigo_wmo": "B001", "uf": "SP"})),
         )
         df = read_stations(tmp_path, years=[2022])
         assert set(df["codigo_wmo"].tolist()) == {"A001"}
