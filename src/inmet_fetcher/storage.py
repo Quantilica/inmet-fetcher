@@ -16,4 +16,4 @@ class InmetRepository(BaseDataRepository):
 
     def path_for_year(self, year: int, filename: str) -> Path:
         """Return the path for a specific year's ZIP file."""
-        return self.raw_path("bdmep", str(year), filename)
+        return self.dataset_path("bdmep", str(year), filename)
