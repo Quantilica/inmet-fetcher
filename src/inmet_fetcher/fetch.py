@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import concurrent.futures
+import contextlib
 import datetime as dt
 from pathlib import Path
 
 from quantilica_core.http import HttpClient
 from quantilica_core.logging import get_logger
 import quantilica_core.metadata as core_meta
+from quantilica_core.progress import batch_progress
 from quantilica_core.storage import stamp_filename
 
 from .storage import InmetRepository
@@ -67,19 +69,23 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
         return None
 
 
-def fetch(years: list[int], destdir: Path, workers: int = 4) -> list[Path]:
+def fetch(years: list[int], destdir: Path, workers: int = 4, show_progress: bool = False) -> list[Path]:
     """Fetch multiple years in parallel."""
     repo = InmetRepository(destdir)
     results = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        future_to_year = {
-            executor.submit(download_year, year, repo): year
-            for year in years
-        }
-        for future in concurrent.futures.as_completed(future_to_year):
-            path = future.result()
-            if path:
-                results.append(path)
+    outer = batch_progress("inmet-bdmep", total=len(years)) if show_progress else contextlib.nullcontext()
+    with outer as pbar:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            future_to_year = {
+                executor.submit(download_year, year, repo): year
+                for year in years
+            }
+            for future in concurrent.futures.as_completed(future_to_year):
+                path = future.result()
+                if path:
+                    results.append(path)
+                if show_progress:
+                    pbar.update(1)
     return sorted(results)
 
 

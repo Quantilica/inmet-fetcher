@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import logging
 from pathlib import Path
 
+from quantilica_core.logging import configure_cli_logging
+
 from . import __version__
-from .fetch import expand_years, fetch
+from .fetch import expand_years, fetch, logger
 from .reader import read, read_stations
 
 
@@ -38,7 +41,7 @@ def _save(data, output: Path, fmt: str) -> None:
 
 def _cmd_fetch(args):
     years = expand_years(*args.years)
-    fetch(years, args.output, workers=args.workers)
+    fetch(years, args.output, workers=args.workers, show_progress=not args.verbose)
 
 
 def _cmd_read(args):
@@ -85,6 +88,12 @@ def main_cli():
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Exibir logs detalhados em vez de barra de progresso",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
@@ -182,4 +191,7 @@ def main_cli():
     )
 
     args = parser.parse_args()
+    configure_cli_logging(verbose=args.verbose)
+    if not args.verbose:
+        logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
     {"fetch": _cmd_fetch, "read": _cmd_read, "stations": _cmd_stations}[args.cmd](args)
