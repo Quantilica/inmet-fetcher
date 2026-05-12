@@ -37,7 +37,7 @@ def _save(data, output: Path, fmt: str) -> None:
 
 def _cmd_fetch(args):
     years = expand_years(*args.years)
-    fetch(years, args.data_dir, workers=args.workers)
+    fetch(years, args.output, workers=args.workers)
 
 
 def _cmd_read(args):
@@ -45,7 +45,7 @@ def _cmd_read(args):
     station = [s.strip() for s in args.station.split(",")] if args.station else None
     years = expand_years(*args.years) if args.years else None
     data = read(
-        args.data_dir,
+        args.output,
         years=years,
         uf=uf,
         station=station,
@@ -56,20 +56,20 @@ def _cmd_read(args):
     if len(data) == 0:
         print("Nenhum dado encontrado.")
         return
-    if args.output:
-        _save(data, args.output, args.format)
+    if args.save_as:
+        _save(data, args.save_as, args.format)
     else:
         print(data)
 
 
 def _cmd_stations(args):
     years = expand_years(*args.years) if args.years else None
-    data = read_stations(args.data_dir, years=years)
+    data = read_stations(args.output, years=years)
     if len(data) == 0:
         print("Nenhuma estação encontrada.")
         return
-    if args.output:
-        _save(data, args.output, args.format)
+    if args.save_as:
+        _save(data, args.save_as, args.format)
     else:
         print(data.to_string())
 
@@ -91,11 +91,12 @@ def main_cli():
         help="Anos (ex: 2020 2021 ou 2020:2024)",
     )
     p_fetch.add_argument(
-        "--data-dir",
-        dest="data_dir",
+        "-o",
+        "--output",
+        dest="output",
         type=Path,
-        required=True,
-        help="Diretório de destino",
+        default=Path("/data/inmet"),
+        help="Diretório de destino (padrão: /data/inmet)",
     )
     p_fetch.add_argument(
         "--workers", type=int, default=4, help="Downloads paralelos (padrão: 4)"
@@ -103,7 +104,14 @@ def main_cli():
 
     # read
     p_read = sub.add_parser("read", help="Ler e exportar dados")
-    p_read.add_argument("--data-dir", dest="data_dir", type=Path, required=True)
+    p_read.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        type=Path,
+        default=Path("/data/inmet"),
+        help="Diretório de dados (padrão: /data/inmet)",
+    )
     p_read.add_argument(
         "--years", nargs="+", default=None, help="Filtrar anos (ex: 2020 ou 2020:2024)"
     )
@@ -117,7 +125,13 @@ def main_cli():
     )
     p_read.add_argument("--start", default=None, help="Data início (ex: 2020-01-01)")
     p_read.add_argument("--end", default=None, help="Data fim (ex: 2020-12-31)")
-    p_read.add_argument("--output", type=Path, default=None, help="Arquivo de saída")
+    p_read.add_argument(
+        "--save-as",
+        dest="save_as",
+        type=Path,
+        default=None,
+        help="Arquivo de exportação (se omitido, imprime no stdout)",
+    )
     p_read.add_argument(
         "--format",
         choices=["parquet", "csv", "json"],
@@ -133,14 +147,27 @@ def main_cli():
 
     # stations
     p_sta = sub.add_parser("stations", help="Exportar catálogo de estações")
-    p_sta.add_argument("--data-dir", dest="data_dir", type=Path, required=True)
+    p_sta.add_argument(
+        "-o",
+        "--output",
+        dest="output",
+        type=Path,
+        default=Path("/data/inmet"),
+        help="Diretório de dados (padrão: /data/inmet)",
+    )
     p_sta.add_argument(
         "--years",
         nargs="+",
         default=None,
         help="Filtrar anos para extração de metadados",
     )
-    p_sta.add_argument("--output", type=Path, default=None, help="Arquivo de saída")
+    p_sta.add_argument(
+        "--save-as",
+        dest="save_as",
+        type=Path,
+        default=None,
+        help="Arquivo de exportação (se omitido, imprime no stdout)",
+    )
     p_sta.add_argument(
         "--format",
         choices=["parquet", "csv", "json"],
