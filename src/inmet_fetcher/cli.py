@@ -6,6 +6,7 @@ import argparse
 import datetime as dt
 from pathlib import Path
 
+from . import __version__
 from .fetch import expand_years, fetch
 from .reader import read, read_stations
 
@@ -79,6 +80,11 @@ def main_cli():
     parser = argparse.ArgumentParser(
         prog="inmet",
         description="INMET BDMEP — coleta e leitura de dados meteorológicos",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
