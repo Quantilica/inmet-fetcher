@@ -4,7 +4,9 @@ from importlib.metadata import PackageNotFoundError, version
 
 from .fetch import expand_years, fetch, generate_catalog
 from .reader import read, read_stations
+from .schema import BDMEP_CONTRACT
 from .storage import InmetRepository
+from .writer import write_to_parquet
 
 try:
     __version__ = version("inmet-fetcher")
@@ -17,4 +19,6 @@ __all__ = [
     "read",
     "read_stations",
     "InmetRepository",
+    "write_to_parquet",
+    "BDMEP_CONTRACT",
 ]
