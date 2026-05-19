@@ -39,8 +39,8 @@ def _save(data, output: Path, fmt: str) -> None:
     print(f"Salvo: {output} ({len(data):,} linhas)")
 
 
-def _cmd_fetch(args):
-    years = expand_years(*args.years)
+def _cmd_sync(args):
+    years = expand_years(*args.years) if args.years else expand_years(f"2000:{dt.datetime.now().year}")
     fetch(years, args.output, workers=args.workers, show_progress=not args.verbose)
 
 
@@ -97,15 +97,15 @@ def main_cli():
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    # fetch
-    p_fetch = sub.add_parser("fetch", help="Baixar dados do INMET")
-    p_fetch.add_argument(
+    # sync
+    p_sync = sub.add_parser("sync", help="Sincronizar dados do INMET")
+    p_sync.add_argument(
         "years",
-        nargs="+",
-        default=[f"2000:{current_year}"],
-        help="Anos (ex: 2020 2021 ou 2020:2024)",
+        nargs="*",
+        default=None,
+        help="Anos (ex: 2020 2021 ou 2020:2024). Padrão: todos os anos.",
     )
-    p_fetch.add_argument(
+    p_sync.add_argument(
         "-o",
         "--output",
         dest="output",
@@ -113,7 +113,7 @@ def main_cli():
         default=Path("/data/inmet"),
         help="Diretório de destino (padrão: /data/inmet)",
     )
-    p_fetch.add_argument(
+    p_sync.add_argument(
         "--workers", type=int, default=4, help="Downloads paralelos (padrão: 4)"
     )
 
@@ -194,4 +194,4 @@ def main_cli():
     configure_cli_logging(verbose=args.verbose)
     if not args.verbose:
         logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
-    {"fetch": _cmd_fetch, "read": _cmd_read, "stations": _cmd_stations}[args.cmd](args)
+    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.cmd](args)

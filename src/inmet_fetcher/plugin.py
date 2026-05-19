@@ -46,12 +46,12 @@ def _save(data, output: Path, fmt: str) -> None:
     console.print(f"[green]✓[/green] Salvo em [bold]{output}[/bold] ({len(data):,} linhas)")
 
 
-@app.command("fetch")
-def cmd_fetch(
+@app.command("sync")
+def cmd_sync(
     years: Annotated[
-        list[str],
-        typer.Argument(help="Anos (ex: 2020 2021 ou 2020:2024)"),
-    ] = [f"2000:{_CURRENT_YEAR}"],
+        Optional[list[str]],
+        typer.Argument(help="Anos (ex: 2020 2021 ou 2020:2024). Padrão: todos os anos."),
+    ] = None,
     output: Annotated[
         Path, typer.Option("-o", "--output", help="Diretório de destino")
     ] = _DEFAULT_OUTPUT,
@@ -59,9 +59,10 @@ def cmd_fetch(
         int, typer.Option("--workers", help="Downloads paralelos")
     ] = 4,
 ) -> None:
-    """Baixar dados do INMET."""
+    """Sincronizar dados do INMET."""
+    years_list = years if years else [f"2000:{_CURRENT_YEAR}"]
     with console.status("[cyan]Baixando dados do INMET...[/cyan]"):
-        fetch(expand_years(*years), output, workers=workers)
+        fetch(expand_years(*years_list), output, workers=workers)
 
 
 @app.command("read")

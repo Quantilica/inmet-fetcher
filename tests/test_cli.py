@@ -20,8 +20,8 @@ def cli(*args):
         main_cli()
 
 
-class TestFetchCLI:
-    def test_fetch_downloads_file(self, tmp_path, httpx_mock):
+class TestSyncCLI:
+    def test_sync_downloads_file(self, tmp_path, httpx_mock):
         from inmet_fetcher.fetch import _build_url
 
         httpx_mock.add_response(
@@ -38,11 +38,11 @@ class TestFetchCLI:
             content=FAKE_CONTENT,
         )
 
-        cli("fetch", "2023", "-o", tmp_path)
+        cli("sync", "2023", "-o", tmp_path)
         repo = InmetRepository(tmp_path)
         assert repo.path_for_year(2023, "2023.zip").exists()
 
-    def test_fetch_workers_flag(self, tmp_path, httpx_mock):
+    def test_sync_workers_flag(self, tmp_path, httpx_mock):
         from inmet_fetcher.fetch import _build_url
 
         for year in [2022, 2023]:
@@ -60,7 +60,7 @@ class TestFetchCLI:
                 content=FAKE_CONTENT,
             )
 
-        cli("fetch", "2022:2023", "-o", tmp_path, "--workers", "2")
+        cli("sync", "2022:2023", "-o", tmp_path, "--workers", "2")
         repo = InmetRepository(tmp_path)
         assert repo.path_for_year(2022, "2022.zip").exists()
         assert repo.path_for_year(2023, "2023.zip").exists()
