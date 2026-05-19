@@ -6,11 +6,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.logging import RichHandler
 
 from inmet_fetcher.fetch import expand_years, fetch
 from inmet_fetcher.reader import read, read_stations
@@ -20,6 +22,17 @@ app = typer.Typer(help="Dados meteorológicos do INMET-BDMEP.")
 _DEFAULT_OUTPUT = Path("/data/inmet")
 _CURRENT_YEAR = dt.datetime.now().year
 console = Console()
+
+
+def _setup_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.WARNING
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(console=console, show_path=False)],
+        force=True,
+    )
 
 
 def _save(data, output: Path, fmt: str) -> None:
@@ -49,7 +62,7 @@ def _save(data, output: Path, fmt: str) -> None:
 @app.command("sync")
 def cmd_sync(
     years: Annotated[
-        Optional[list[str]],
+        list[str] | None,
         typer.Argument(help="Anos (ex: 2020 2021 ou 2020:2024). Padrão: todos os anos."),
     ] = None,
     output: Annotated[
@@ -58,11 +71,14 @@ def cmd_sync(
     workers: Annotated[
         int, typer.Option("--workers", help="Downloads paralelos")
     ] = 4,
+    verbose: Annotated[
+        bool, typer.Option("--verbose", help="Logs detalhados")
+    ] = False,
 ) -> None:
     """Sincronizar dados do INMET."""
+    _setup_logging(verbose)
     years_list = years if years else [f"2000:{_CURRENT_YEAR}"]
-    with console.status("[cyan]Baixando dados do INMET...[/cyan]"):
-        fetch(expand_years(*years_list), output, workers=workers)
+    fetch(expand_years(*years_list), output, workers=workers, show_progress=not verbose)
 
 
 @app.command("read")
@@ -71,22 +87,22 @@ def cmd_read(
         Path, typer.Option("-o", "--output", help="Diretório de dados")
     ] = _DEFAULT_OUTPUT,
     years: Annotated[
-        Optional[list[str]], typer.Option("--years", help="Filtrar anos (ex: 2020 ou 2020:2024)")
+        list[str] | None, typer.Option("--years", help="Filtrar anos (ex: 2020 ou 2020:2024)")
     ] = None,
     uf: Annotated[
-        Optional[str], typer.Option("--uf", help="UFs separadas por vírgula (ex: SP,RJ,MG)")
+        str | None, typer.Option("--uf", help="UFs separadas por vírgula (ex: SP,RJ,MG)")
     ] = None,
     station: Annotated[
-        Optional[str], typer.Option("--station", help="Códigos WMO separados por vírgula")
+        str | None, typer.Option("--station", help="Códigos WMO separados por vírgula")
     ] = None,
     start: Annotated[
-        Optional[str], typer.Option("--start", help="Data início (ex: 2020-01-01)")
+        str | None, typer.Option("--start", help="Data início (ex: 2020-01-01)")
     ] = None,
     end: Annotated[
-        Optional[str], typer.Option("--end", help="Data fim (ex: 2020-12-31)")
+        str | None, typer.Option("--end", help="Data fim (ex: 2020-12-31)")
     ] = None,
     save_as: Annotated[
-        Optional[Path], typer.Option("--save-as", help="Arquivo de exportação")
+        Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
     fmt: Annotated[
         str, typer.Option("--format", help="Formato de saída")
@@ -115,10 +131,10 @@ def cmd_stations(
         Path, typer.Option("-o", "--output", help="Diretório de dados")
     ] = _DEFAULT_OUTPUT,
     years: Annotated[
-        Optional[list[str]], typer.Option("--years", help="Filtrar anos para metadados")
+        list[str] | None, typer.Option("--years", help="Filtrar anos para metadados")
     ] = None,
     save_as: Annotated[
-        Optional[Path], typer.Option("--save-as", help="Arquivo de exportação")
+        Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
     fmt: Annotated[
         str, typer.Option("--format", help="Formato de saída")

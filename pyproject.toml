@@ -41,7 +41,7 @@ Repository = "https://github.com/Quantilica/inmet-fetcher"
 Issues = "https://github.com/Quantilica/inmet-fetcher/issues"
 
 [project.scripts]
-inmet-fetcher = "inmet_fetcher.cli:main_cli"
+inmet-fetcher = "inmet_fetcher.cli:main"
 
 [project.entry-points."quantilica.fetchers"]
 inmet = "inmet_fetcher.plugin:app"

@@ -1,13 +1,10 @@
-"""Integration tests for CLI subcommands via main_cli()."""
-
-import sys
-from unittest.mock import patch
+"""Integration tests for CLI subcommands via main()."""
 
 import httpx
 import pandas as pd
 import pytest
 
-from inmet_fetcher.cli import main_cli
+from inmet_fetcher.cli import main
 from inmet_fetcher.storage import InmetRepository
 from tests.conftest import DEFAULT_DATA_ROWS, make_zip_bytes
 
@@ -16,8 +13,7 @@ FAKE_CONTENT = b"PK" + b"\x00" * 200
 
 
 def cli(*args):
-    with patch("sys.argv", ["inmet", *[str(a) for a in args]]):
-        main_cli()
+    main([str(a) for a in args])
 
 
 class TestSyncCLI:

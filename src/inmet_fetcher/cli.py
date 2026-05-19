@@ -10,7 +10,7 @@ from pathlib import Path
 from quantilica_core.logging import configure_cli_logging
 
 from . import __version__
-from .fetch import expand_years, fetch, logger
+from .fetch import expand_years, fetch
 from .reader import read, read_stations
 
 
@@ -78,10 +78,10 @@ def _cmd_stations(args):
         print(data.to_string())
 
 
-def main_cli():
+def get_parser() -> argparse.ArgumentParser:
     current_year = dt.datetime.now().year
     parser = argparse.ArgumentParser(
-        prog="inmet",
+        prog="inmet-fetcher",
         description="INMET BDMEP — coleta e leitura de dados meteorológicos",
     )
     parser.add_argument(
@@ -95,7 +95,7 @@ def main_cli():
         default=False,
         help="Exibir logs detalhados em vez de barra de progresso",
     )
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(dest="command", required=True)
 
     # sync
     p_sync = sub.add_parser("sync", help="Sincronizar dados do INMET")
@@ -190,8 +190,15 @@ def main_cli():
         help="Formato de saída (padrão: csv)",
     )
 
-    args = parser.parse_args()
+    return parser
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = get_parser()
+    args = parser.parse_args(argv)
     configure_cli_logging(verbose=args.verbose)
-    if not args.verbose:
-        logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
-    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.cmd](args)
+    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](args)
+
+
+if __name__ == "__main__":
+    main()
