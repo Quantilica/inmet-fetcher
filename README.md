@@ -29,41 +29,44 @@ pip install git+https://github.com/Quantilica/inmet-fetcher.git
 
 ## CLI
 
-O pacote instala o comando `inmet-fetcher` com três subcomandos.
+O pacote instala o comando `inmet-fetcher` com três subcomandos: `sync`, `read` e `stations`.
 
-### `inmet-fetcher fetch` — Baixar dados
+### `inmet-fetcher sync` — Baixar dados
 
 ```bash
 # Um ano
-inmet-fetcher fetch 2023 --data-dir ./dados
+inmet-fetcher sync 2023 -o ./dados
 
 # Intervalo de anos
-inmet-fetcher fetch 2018:2023 --data-dir ./dados
+inmet-fetcher sync 2018:2023 -o ./dados
 
 # Múltiplos anos/intervalos, 8 downloads paralelos
-inmet-fetcher fetch 2010 2015 2020:2023 --data-dir ./dados --workers 8
+inmet-fetcher sync 2010 2015 2020:2023 -o ./dados --workers 8
+
+# Sem anos, sincroniza todos os anos disponíveis
+inmet-fetcher sync -o ./dados
 ```
 
 ### `inmet-fetcher read` — Ler e exportar
 
 ```bash
 # Exportar tudo em Parquet
-inmet-fetcher read --data-dir ./dados --output dados.parquet
+inmet-fetcher read -o ./dados --save-as dados.parquet
 
 # Filtrar por UF e ano, exportar CSV
-inmet-fetcher read --data-dir ./dados --years 2022:2023 --uf SP,RJ --output sp_rj.csv --format csv
+inmet-fetcher read -o ./dados --years 2022:2023 --uf SP,RJ --save-as sp_rj.csv --format csv
 
 # Filtrar por estação e período
-inmet-fetcher read --data-dir ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --output a701.parquet
+inmet-fetcher read -o ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --save-as a701.parquet
 
 # Usar polars como engine
-inmet-fetcher read --data-dir ./dados --uf MG --output mg.parquet --engine polars
+inmet-fetcher read -o ./dados --uf MG --save-as mg.parquet --engine polars
 ```
 
 ### `inmet-fetcher stations` — Catálogo de estações
 
 ```bash
-inmet-fetcher stations --data-dir ./dados --output estacoes.csv
+inmet-fetcher stations -o ./dados --save-as estacoes.csv
 ```
 
 ---
