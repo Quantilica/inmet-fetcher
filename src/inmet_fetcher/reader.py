@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from quantilica_io.reader import read_brazilian_csv
 from tqdm import tqdm
 
 from .storage import InmetRepository
@@ -109,12 +110,10 @@ def _fix_hora(h: str) -> str:
 
 
 def read_station_data(f) -> pd.DataFrame:
-    d = pd.read_csv(
+    d = read_brazilian_csv(
         f,
-        sep=";",
-        decimal=",",
-        na_values="-9999",
-        encoding="latin-1",
+        engine="pandas",
+        na_values=["-9999"],
         skiprows=8,
         usecols=range(19),
     )

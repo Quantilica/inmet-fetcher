@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import concurrent.futures
 import contextlib
-import datetime as dt
 from pathlib import Path
 
+import quantilica_core.metadata as core_meta
+from quantilica_core.dates import expand_year_range
 from quantilica_core.http import HttpClient
 from quantilica_core.logging import get_logger
-import quantilica_core.metadata as core_meta
 from quantilica_core.progress import batch_progress
-from quantilica_core.storage import stamp_filename
+from quantilica_core.storage import build_stamped_filename
 
 from .storage import InmetRepository
 
@@ -21,14 +21,7 @@ client = HttpClient(timeout=60.0)
 
 def expand_years(*years: str) -> list[int]:
     """Expand year strings like '2020:2022' or '2020' into a list of ints."""
-    year_list = []
-    for y in years:
-        if ":" in y:
-            start, end = y.split(":")
-            year_list.extend(range(int(start), int(end) + 1))
-        else:
-            year_list.append(int(y))
-    return year_list
+    return expand_year_range(*years)
 
 
 def build_url(year: int) -> str:
@@ -39,22 +32,13 @@ def build_url(year: int) -> str:
 _build_url = build_url
 
 
-def _safe_head_date(url: str) -> dt.date | None:
-    """Return the Last-Modified date from a HEAD request, or None on failure."""
-    try:
-        meta = client.head_metadata(url)
-        lm = meta.get("last_modified")
-        return lm.date() if lm else None
-    except Exception as e:
-        logger.warning(f"Could not fetch metadata for {url}: {e}")
-        return None
-
-
 def download_year(year: int, repo: InmetRepository) -> Path | None:
     """Download a single year's ZIP file using quantilica-core."""
     url = build_url(year)
-    date = _safe_head_date(url)
-    filename = stamp_filename(f"inmet-bdmep_{year}", "zip", date)
+    date = client.head_last_modified_date(url)
+    filename = build_stamped_filename(
+        "inmet-bdmep", year, ext="zip", timestamp=date
+    )
     target_path = repo.path_for_year(year, filename)
     try:
         return client.download_with_manifest(

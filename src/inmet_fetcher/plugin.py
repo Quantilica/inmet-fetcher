@@ -6,13 +6,11 @@
 from __future__ import annotations
 
 import datetime as dt
-import logging
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from rich.console import Console
-from rich.logging import RichHandler
+from quantilica_core.cli import get_console, setup_rich_logging
 
 from inmet_fetcher.fetch import expand_years, fetch
 from inmet_fetcher.reader import read, read_stations
@@ -21,18 +19,7 @@ app = typer.Typer(help="Dados meteorológicos do INMET-BDMEP.")
 
 _DEFAULT_OUTPUT = Path("/data/inmet")
 _CURRENT_YEAR = dt.datetime.now().year
-console = Console()
-
-
-def _setup_logging(verbose: bool) -> None:
-    level = logging.DEBUG if verbose else logging.WARNING
-    logging.basicConfig(
-        level=level,
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[RichHandler(console=console, show_path=False)],
-        force=True,
-    )
+console = get_console()
 
 
 def _save(data, output: Path, fmt: str) -> None:
@@ -76,7 +63,7 @@ def cmd_sync(
     ] = False,
 ) -> None:
     """Sincronizar dados do INMET."""
-    _setup_logging(verbose)
+    setup_rich_logging(verbose, console=console)
     years_list = years if years else [f"2000:{_CURRENT_YEAR}"]
     fetch(expand_years(*years_list), output, workers=workers, show_progress=not verbose)
 
