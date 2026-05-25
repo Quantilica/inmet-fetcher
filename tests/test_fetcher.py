@@ -17,6 +17,7 @@ FAKE_CONTENT = b"PK" + b"\x00" * 200  # 202 bytes, resembles a zip header
 @pytest.fixture(autouse=True)
 def fast_client(monkeypatch):
     from inmet_fetcher.fetch import client
+
     monkeypatch.setattr(client, "attempts", 1)
     monkeypatch.setattr(client, "retry_base_delay", 0)
 
@@ -26,7 +27,9 @@ def _expected_path(destdir, year):
     return InmetRepository(destdir).path_for_year(year, filename)
 
 
-def _add_head(httpx_mock, year, *, last_modified=FAKE_LAST_MODIFIED, content_length=True):
+def _add_head(
+    httpx_mock, year, *, last_modified=FAKE_LAST_MODIFIED, content_length=True
+):
     """Add a HEAD mock response.
 
     ``content_length=True`` (default) → Content-Length: len(FAKE_CONTENT)
@@ -53,9 +56,11 @@ def _add_head(httpx_mock, year, *, last_modified=FAKE_LAST_MODIFIED, content_len
 
 class TestDownloadYear:
     def test_downloads_file(self, tmp_path, httpx_mock):
-        _add_head(httpx_mock, 2023)   # _safe_head_date
-        _add_head(httpx_mock, 2023)   # download_with_manifest freshness
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        _add_head(httpx_mock, 2023)  # _safe_head_date
+        _add_head(httpx_mock, 2023)  # download_with_manifest freshness
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         result = download_year(2023, InmetRepository(tmp_path))
 
@@ -66,7 +71,9 @@ class TestDownloadYear:
     def test_returns_correct_path(self, tmp_path, httpx_mock):
         _add_head(httpx_mock, 2023)
         _add_head(httpx_mock, 2023)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         result = download_year(2023, InmetRepository(tmp_path))
         assert result == _expected_path(tmp_path, 2023)
@@ -75,7 +82,9 @@ class TestDownloadYear:
         destdir = tmp_path / "new" / "subdir"
         _add_head(httpx_mock, 2023)
         _add_head(httpx_mock, 2023)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         download_year(2023, InmetRepository(destdir))
         assert destdir.exists()
@@ -103,7 +112,9 @@ class TestDownloadYear:
         # File exists with wrong size → HEAD ok → GET
         _add_head(httpx_mock, 2023)
         _add_head(httpx_mock, 2023)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         result = download_year(2023, InmetRepository(tmp_path))
         assert result.read_bytes() == FAKE_CONTENT
@@ -132,7 +143,9 @@ class TestDownloadYear:
     def test_handles_missing_last_modified_on_new_download(self, tmp_path, httpx_mock):
         _add_head(httpx_mock, 2023, last_modified=None)
         _add_head(httpx_mock, 2023, last_modified=None)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         result = download_year(2023, InmetRepository(tmp_path))
         assert result is not None
@@ -141,7 +154,9 @@ class TestDownloadYear:
     def test_handles_missing_content_length(self, tmp_path, httpx_mock):
         _add_head(httpx_mock, 2023, content_length=False)
         _add_head(httpx_mock, 2023, content_length=False)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         result = download_year(2023, InmetRepository(tmp_path))
         assert result is not None
@@ -154,7 +169,9 @@ class TestFetch:
         for year in years:
             _add_head(httpx_mock, year)
             _add_head(httpx_mock, year)
-            httpx_mock.add_response(method="GET", url=_build_url(year), content=FAKE_CONTENT)
+            httpx_mock.add_response(
+                method="GET", url=_build_url(year), content=FAKE_CONTENT
+            )
 
         results = fetch(years, tmp_path, workers=2)
         assert len(results) == 3
@@ -166,7 +183,9 @@ class TestFetch:
         for year in years:
             _add_head(httpx_mock, year)
             _add_head(httpx_mock, year)
-            httpx_mock.add_response(method="GET", url=_build_url(year), content=FAKE_CONTENT)
+            httpx_mock.add_response(
+                method="GET", url=_build_url(year), content=FAKE_CONTENT
+            )
 
         results = fetch(years, tmp_path, workers=3)
         assert results == sorted(results)
@@ -175,7 +194,9 @@ class TestFetch:
         # 2022 succeeds
         _add_head(httpx_mock, 2022)
         _add_head(httpx_mock, 2022)
-        httpx_mock.add_response(method="GET", url=_build_url(2022), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2022), content=FAKE_CONTENT
+        )
         # 2023 fails: HEAD 404 (caught) → HEAD 404 (swallowed) → GET 404 → outer except
         httpx_mock.add_response(method="HEAD", url=_build_url(2023), status_code=404)
         httpx_mock.add_response(method="HEAD", url=_build_url(2023), status_code=404)
@@ -188,7 +209,9 @@ class TestFetch:
     def test_single_worker(self, tmp_path, httpx_mock):
         _add_head(httpx_mock, 2023)
         _add_head(httpx_mock, 2023)
-        httpx_mock.add_response(method="GET", url=_build_url(2023), content=FAKE_CONTENT)
+        httpx_mock.add_response(
+            method="GET", url=_build_url(2023), content=FAKE_CONTENT
+        )
 
         results = fetch([2023], tmp_path, workers=1)
         assert len(results) == 1

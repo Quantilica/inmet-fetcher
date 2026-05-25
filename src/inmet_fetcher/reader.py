@@ -134,9 +134,7 @@ def read_station_data(f) -> pl.DataFrame:
     d = d.rename({col: _rename_col(col) for col in d.columns})
     # Remove rows where every measurement column is null
     measure_cols = [c for c in _MEASURE_COLS if c in d.columns]
-    d = d.filter(
-        pl.any_horizontal(pl.col(c).is_not_null() for c in measure_cols)
-    )
+    d = d.filter(pl.any_horizontal(pl.col(c).is_not_null() for c in measure_cols))
     # Parse datetime: "0000 UTC" → "00:00", already "HH:MM" stays unchanged
     d = d.with_columns(
         pl.concat_str(
@@ -173,23 +171,16 @@ def read_zipfile(
                 continue
             d = read_station_data(z.open(zf.filename))
             d = d.with_columns(
-                [
-                    pl.lit(meta[k], dtype=_META_DTYPES[k]).alias(k)
-                    for k in _META_DTYPES
-                ]
+                [pl.lit(meta[k], dtype=_META_DTYPES[k]).alias(k) for k in _META_DTYPES]
             )
             frames.append(d)
     if not frames:
         return pl.DataFrame()
     data = pl.concat(frames)
     if start:
-        data = data.filter(
-            pl.col("data_hora") >= dt.datetime.fromisoformat(start)
-        )
+        data = data.filter(pl.col("data_hora") >= dt.datetime.fromisoformat(start))
     if end:
-        data = data.filter(
-            pl.col("data_hora") <= dt.datetime.fromisoformat(end)
-        )
+        data = data.filter(pl.col("data_hora") <= dt.datetime.fromisoformat(end))
     return data
 
 

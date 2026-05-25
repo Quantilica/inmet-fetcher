@@ -36,9 +36,7 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
     """Download a single year's ZIP file using quantilica-core."""
     url = build_url(year)
     date = client.head_last_modified_date(url)
-    filename = build_stamped_filename(
-        "inmet-bdmep", year, ext="zip", timestamp=date
-    )
+    filename = build_stamped_filename("inmet-bdmep", year, ext="zip", timestamp=date)
     target_path = repo.path_for_year(year, filename)
     try:
         return client.download_with_manifest(
@@ -53,16 +51,21 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
         return None
 
 
-def fetch(years: list[int], destdir: Path, workers: int = 4, show_progress: bool = False) -> list[Path]:
+def fetch(
+    years: list[int], destdir: Path, workers: int = 4, show_progress: bool = False
+) -> list[Path]:
     """Fetch multiple years in parallel."""
     repo = InmetRepository(destdir)
     results = []
-    outer = batch_progress("inmet-bdmep", total=len(years)) if show_progress else contextlib.nullcontext()
+    outer = (
+        batch_progress("inmet-bdmep", total=len(years))
+        if show_progress
+        else contextlib.nullcontext()
+    )
     with outer as pbar:
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             future_to_year = {
-                executor.submit(download_year, year, repo): year
-                for year in years
+                executor.submit(download_year, year, repo): year for year in years
             }
             for future in concurrent.futures.as_completed(future_to_year):
                 path = future.result()
@@ -94,7 +97,7 @@ def generate_catalog(downloaded_files: list[Path]) -> core_meta.MetadataCatalog:
     for file_path in downloaded_files:
         filename = file_path.name
         resource_id = filename.replace(".", "_")
-        
+
         resources.append(
             core_meta.Resource(
                 id=resource_id,

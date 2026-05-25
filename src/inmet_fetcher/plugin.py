@@ -30,24 +30,24 @@ def _save(data: pl.DataFrame, output: Path, fmt: str) -> None:
         data.write_csv(output)
     elif fmt == "json":
         data.write_json(output)
-    console.print(f"[green]✓[/green] Salvo em [bold]{output}[/bold] ({len(data):,} linhas)")
+    console.print(
+        f"[green]✓[/green] Salvo em [bold]{output}[/bold] ({len(data):,} linhas)"
+    )
 
 
 @app.command("sync")
 def cmd_sync(
     years: Annotated[
         list[str] | None,
-        typer.Argument(help="Anos (ex: 2020 2021 ou 2020:2024). Padrão: todos os anos."),
+        typer.Argument(
+            help="Anos (ex: 2020 2021 ou 2020:2024). Padrão: todos os anos."
+        ),
     ] = None,
     output: Annotated[
         Path, typer.Option("-o", "--output", help="Diretório de destino")
     ] = _DEFAULT_OUTPUT,
-    workers: Annotated[
-        int, typer.Option("--workers", help="Downloads paralelos")
-    ] = 4,
-    verbose: Annotated[
-        bool, typer.Option("--verbose", help="Logs detalhados")
-    ] = False,
+    workers: Annotated[int, typer.Option("--workers", help="Downloads paralelos")] = 4,
+    verbose: Annotated[bool, typer.Option("--verbose", help="Logs detalhados")] = False,
 ) -> None:
     """Sincronizar dados do INMET."""
     setup_rich_logging(verbose, console=console)
@@ -61,10 +61,12 @@ def cmd_read(
         Path, typer.Option("-o", "--output", help="Diretório de dados")
     ] = _DEFAULT_OUTPUT,
     years: Annotated[
-        list[str] | None, typer.Option("--years", help="Filtrar anos (ex: 2020 ou 2020:2024)")
+        list[str] | None,
+        typer.Option("--years", help="Filtrar anos (ex: 2020 ou 2020:2024)"),
     ] = None,
     uf: Annotated[
-        str | None, typer.Option("--uf", help="UFs separadas por vírgula (ex: SP,RJ,MG)")
+        str | None,
+        typer.Option("--uf", help="UFs separadas por vírgula (ex: SP,RJ,MG)"),
     ] = None,
     station: Annotated[
         str | None, typer.Option("--station", help="Códigos WMO separados por vírgula")
@@ -78,15 +80,15 @@ def cmd_read(
     save_as: Annotated[
         Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
-    fmt: Annotated[
-        str, typer.Option("--format", help="Formato de saída")
-    ] = "parquet",
+    fmt: Annotated[str, typer.Option("--format", help="Formato de saída")] = "parquet",
 ) -> None:
     """Ler e exportar dados do INMET."""
     uf_list = [u.strip().upper() for u in uf.split(",")] if uf else None
     station_list = [s.strip() for s in station.split(",")] if station else None
     years_list = expand_years(*years) if years else None
-    data = read(output, years=years_list, uf=uf_list, station=station_list, start=start, end=end)
+    data = read(
+        output, years=years_list, uf=uf_list, station=station_list, start=start, end=end
+    )
     if len(data) == 0:
         console.print("[yellow]Nenhum dado encontrado.[/yellow]")
         return
@@ -107,9 +109,7 @@ def cmd_stations(
     save_as: Annotated[
         Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
-    fmt: Annotated[
-        str, typer.Option("--format", help="Formato de saída")
-    ] = "csv",
+    fmt: Annotated[str, typer.Option("--format", help="Formato de saída")] = "csv",
 ) -> None:
     """Exportar catálogo de estações meteorológicas."""
     years_list = expand_years(*years) if years else None

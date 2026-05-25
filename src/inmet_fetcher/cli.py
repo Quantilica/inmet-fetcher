@@ -26,7 +26,11 @@ def _save(data: pl.DataFrame, output: Path, fmt: str) -> None:
 
 
 def _cmd_sync(args):
-    years = expand_years(*args.years) if args.years else expand_years(f"2000:{dt.datetime.now().year}")
+    years = (
+        expand_years(*args.years)
+        if args.years
+        else expand_years(f"2000:{dt.datetime.now().year}")
+    )
     fetch(years, args.output, workers=args.workers, show_progress=not args.verbose)
 
 
@@ -176,7 +180,9 @@ def main(argv: list[str] | None = None) -> None:
     parser = get_parser()
     args = parser.parse_args(argv)
     configure_cli_logging(verbose=args.verbose)
-    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](args)
+    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](
+        args
+    )
 
 
 if __name__ == "__main__":

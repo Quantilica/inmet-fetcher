@@ -41,9 +41,7 @@ class TestBdmepContractValidate:
             BDMEP_CONTRACT.validate(df)
 
     def test_rejects_wrong_dtype(self):
-        df = _make_valid_frame().with_columns(
-            pl.col("latitude").cast(pl.Utf8)
-        )
+        df = _make_valid_frame().with_columns(pl.col("latitude").cast(pl.Utf8))
         with pytest.raises(TypeError, match="latitude"):
             BDMEP_CONTRACT.validate(df)
 
