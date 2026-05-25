@@ -4,8 +4,7 @@ import datetime as dt
 import io
 import zipfile
 
-import numpy as np
-import pandas as pd
+import polars as pl
 import pytest
 
 from inmet_fetcher.reader import (
@@ -61,13 +60,13 @@ class TestReadMetadata:
         assert meta["longitude"] == pytest.approx(-60.016)
         assert meta["altitude"] == pytest.approx(48.0)
 
-    def test_invalid_coordinate_returns_nan(self, tmp_path):
+    def test_invalid_coordinate_returns_none(self, tmp_path):
         csv_bytes = make_station_csv(latitude="N/D", longitude="N/D")
         path = tmp_path / "test.csv"
         path.write_bytes(csv_bytes)
         meta = read_metadata(path)
-        assert np.isnan(meta["latitude"])
-        assert np.isnan(meta["longitude"])
+        assert meta["latitude"] is None
+        assert meta["longitude"] is None
 
     def test_date_iso_format(self, tmp_path):
         csv_bytes = make_station_csv(data_fundacao="1990-06-15")
@@ -101,7 +100,7 @@ class TestReadStationData:
 
     def test_returns_dataframe(self):
         df = read_station_data(self._make_file())
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pl.DataFrame)
 
     def test_expected_columns(self):
         df = read_station_data(self._make_file())
@@ -117,26 +116,26 @@ class TestReadStationData:
 
     def test_datetime_column_type(self):
         df = read_station_data(self._make_file())
-        assert pd.api.types.is_datetime64_any_dtype(df["data_hora"])
+        assert df["data_hora"].dtype == pl.Datetime
 
     def test_datetime_values(self):
         df = read_station_data(self._make_file())
-        assert df["data_hora"].iloc[0] == pd.Timestamp("2023-01-01 00:00")
-        assert df["data_hora"].iloc[1] == pd.Timestamp("2023-01-01 01:00")
-        assert df["data_hora"].iloc[2] == pd.Timestamp("2023-01-02 00:00")
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0)
+        assert df["data_hora"][1] == dt.datetime(2023, 1, 1, 1, 0)
+        assert df["data_hora"][2] == dt.datetime(2023, 1, 2, 0, 0)
 
     def test_decimal_comma_parsed(self):
         df = read_station_data(self._make_file())
-        assert df["temperatura_ar"].iloc[0] == pytest.approx(28.5)
-        assert df["precipitacao"].iloc[1] == pytest.approx(0.2)
+        assert df["temperatura_ar"][0] == pytest.approx(28.5)
+        assert df["precipitacao"][1] == pytest.approx(0.2)
 
     def test_na_values_parsed(self):
         rows = [
             "2023-01-01;0000 UTC;-9999;1013,2;1013,5;1012,8;100,0;-9999;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"
         ]
         df = read_station_data(self._make_file(data_rows=rows))
-        assert np.isnan(df["precipitacao"].iloc[0])
-        assert np.isnan(df["temperatura_ar"].iloc[0])
+        assert df["precipitacao"][0] is None
+        assert df["temperatura_ar"][0] is None
 
     def test_all_null_rows_filtered(self):
         rows = DEFAULT_DATA_ROWS + [ALL_NULL_ROW]
@@ -148,7 +147,7 @@ class TestReadStationData:
             "2023/01/01;00:00;0,0;1013,2;1013,5;1012,8;100,0;28,5;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"
         ]
         df = read_station_data(self._make_file(data_rows=rows))
-        assert df["data_hora"].iloc[0] == pd.Timestamp("2023-01-01 00:00")
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0)
 
 
 # ─── read_zipfile ───────────────────────────────────────────────────────────
@@ -157,7 +156,7 @@ class TestReadStationData:
 class TestReadZipfile:
     def test_returns_dataframe(self, sample_zip_path):
         df = read_zipfile(sample_zip_path)
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pl.DataFrame)
         assert len(df) > 0
 
     def test_metadata_attached(self, sample_zip_path):
@@ -165,14 +164,14 @@ class TestReadZipfile:
         assert "uf" in df.columns
         assert "codigo_wmo" in df.columns
         assert "latitude" in df.columns
-        assert df["uf"].iloc[0] == "AM"
-        assert df["codigo_wmo"].iloc[0] == "A001"
+        assert df["uf"][0] == "AM"
+        assert df["codigo_wmo"][0] == "A001"
 
     def test_filter_uf_match(self, tmp_path, multi_station_zip_bytes):
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
         path.write_bytes(multi_station_zip_bytes)
         df = read_zipfile(path, uf=["SP"])
-        assert set(df["uf"].unique()) == {"SP"}
+        assert set(df["uf"].to_list()) == {"SP"}
 
     def test_filter_uf_no_match(self, tmp_path, multi_station_zip_bytes):
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
@@ -184,13 +183,13 @@ class TestReadZipfile:
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
         path.write_bytes(multi_station_zip_bytes)
         df = read_zipfile(path, uf=["SP", "RJ"])
-        assert set(df["uf"].unique()) == {"SP", "RJ"}
+        assert set(df["uf"].to_list()) == {"SP", "RJ"}
 
     def test_filter_station_match(self, tmp_path, multi_station_zip_bytes):
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
         path.write_bytes(multi_station_zip_bytes)
         df = read_zipfile(path, station=["B001"])
-        assert set(df["codigo_wmo"].unique()) == {"B001"}
+        assert set(df["codigo_wmo"].to_list()) == {"B001"}
 
     def test_filter_station_no_match(self, tmp_path, multi_station_zip_bytes):
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
@@ -200,18 +199,18 @@ class TestReadZipfile:
 
     def test_filter_start_date(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, start="2023-01-02")
-        assert all(df["data_hora"] >= pd.Timestamp("2023-01-02"))
+        assert (df["data_hora"] >= dt.datetime(2023, 1, 2)).all()
 
     def test_filter_end_date(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, end="2023-01-01")
-        assert all(df["data_hora"] <= pd.Timestamp("2023-01-01"))
+        assert (df["data_hora"] <= dt.datetime(2023, 1, 1, 23, 59, 59)).all()
 
     def test_filter_date_range(self, sample_zip_path):
         df = read_zipfile(
             sample_zip_path, start="2023-01-01 01:00", end="2023-01-01 01:00"
         )
         assert len(df) == 1
-        assert df["data_hora"].iloc[0] == pd.Timestamp("2023-01-01 01:00")
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 1, 0)
 
     def test_filter_date_no_match_returns_empty(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, start="2025-01-01")
@@ -223,7 +222,7 @@ class TestReadZipfile:
         path = tmp_path / "inmet-bdmep_2023_20240101.zip"
         path.write_bytes(multi_station_zip_bytes)
         df = read_zipfile(path)
-        assert set(df["uf"].unique()) == {"AM", "SP", "RJ"}
+        assert set(df["uf"].to_list()) == {"AM", "SP", "RJ"}
 
 
 # ─── find_zipfiles ──────────────────────────────────────────────────────────
@@ -277,7 +276,7 @@ class TestRead:
 
     def test_basic_read(self, tmp_path, sample_zip_path):
         df = read(tmp_path)
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pl.DataFrame)
         assert len(df) > 0
 
     def _write_zip(self, tmp_path, year: int, zip_bytes: bytes) -> None:
@@ -298,17 +297,17 @@ class TestRead:
     def test_uf_filter(self, tmp_path, multi_station_zip_bytes):
         self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read(tmp_path, uf=["SP"])
-        assert set(df["uf"].unique()) == {"SP"}
+        assert set(df["uf"].to_list()) == {"SP"}
 
     def test_station_filter(self, tmp_path, multi_station_zip_bytes):
         self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read(tmp_path, station=["C001"])
-        assert set(df["codigo_wmo"].unique()) == {"C001"}
+        assert set(df["codigo_wmo"].to_list()) == {"C001"}
 
     def test_date_filter(self, tmp_path, sample_zip_path):
         df = read(tmp_path, start="2023-01-02", end="2023-01-02")
-        assert all(df["data_hora"] >= pd.Timestamp("2023-01-02"))
-        assert all(df["data_hora"] <= pd.Timestamp("2023-01-02 23:59"))
+        assert (df["data_hora"] >= dt.datetime(2023, 1, 2)).all()
+        assert (df["data_hora"] <= dt.datetime(2023, 1, 2, 23, 59)).all()
 
     def test_multi_year_concat(self, tmp_path, make_zip):
         for year in [2021, 2022]:
@@ -319,25 +318,6 @@ class TestRead:
             )
         df = read(tmp_path)
         assert len(df) == 2 * len(DEFAULT_DATA_ROWS)
-
-    def test_polars_engine(self, tmp_path, sample_zip_path):
-        polars = pytest.importorskip("polars")
-        df = read(tmp_path, engine="polars")
-        assert isinstance(df, polars.DataFrame)
-
-    def test_polars_not_installed_raises(self, tmp_path, sample_zip_path, monkeypatch):
-        import builtins
-
-        real_import = builtins.__import__
-
-        def mock_import(name, *args, **kwargs):
-            if name == "polars":
-                raise ImportError("No module named 'polars'")
-            return real_import(name, *args, **kwargs)
-
-        monkeypatch.setattr(builtins, "__import__", mock_import)
-        with pytest.raises(ImportError, match="polars"):
-            read(tmp_path, engine="polars")
 
 
 # ─── read_stations ──────────────────────────────────────────────────────────
@@ -356,7 +336,7 @@ class TestReadStations:
 
     def test_returns_dataframe(self, tmp_path, sample_zip_path):
         df = read_stations(tmp_path)
-        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df, pl.DataFrame)
 
     def test_expected_columns(self, tmp_path, sample_zip_path):
         df = read_stations(tmp_path)
@@ -369,17 +349,17 @@ class TestReadStations:
                 tmp_path, year, make_zip(("A001.CSV", {"codigo_wmo": "A001"}))
             )
         df = read_stations(tmp_path)
-        assert len(df[df["codigo_wmo"] == "A001"]) == 1
+        assert len(df.filter(pl.col("codigo_wmo") == "A001")) == 1
 
     def test_multiple_stations(self, tmp_path, multi_station_zip_bytes):
         self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read_stations(tmp_path)
-        assert set(df["codigo_wmo"].tolist()) == {"A001", "B001", "C001"}
+        assert set(df["codigo_wmo"].to_list()) == {"A001", "B001", "C001"}
 
     def test_sorted_by_codigo_wmo(self, tmp_path, multi_station_zip_bytes):
         self._write_zip(tmp_path, 2023, multi_station_zip_bytes)
         df = read_stations(tmp_path)
-        codes = df["codigo_wmo"].tolist()
+        codes = df["codigo_wmo"].to_list()
         assert codes == sorted(codes)
 
     def test_year_filter(self, tmp_path, make_zip):
@@ -394,4 +374,4 @@ class TestReadStations:
             make_zip(("B001.CSV", {"codigo_wmo": "B001", "uf": "SP"})),
         )
         df = read_stations(tmp_path, years=[2022])
-        assert set(df["codigo_wmo"].tolist()) == {"A001"}
+        assert set(df["codigo_wmo"].to_list()) == {"A001"}

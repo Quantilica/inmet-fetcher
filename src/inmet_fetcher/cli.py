@@ -7,6 +7,7 @@ import datetime as dt
 import logging
 from pathlib import Path
 
+import polars as pl
 from quantilica_core.logging import configure_cli_logging
 
 from . import __version__
@@ -14,28 +15,13 @@ from .fetch import expand_years, fetch
 from .reader import read, read_stations
 
 
-def _save(data, output: Path, fmt: str) -> None:
-    try:
-        import polars as pl
-
-        is_polars = isinstance(data, pl.DataFrame)
-    except ImportError:
-        is_polars = False
-
-    if is_polars:
-        if fmt == "parquet":
-            data.write_parquet(output)
-        elif fmt == "csv":
-            data.write_csv(output)
-        elif fmt == "json":
-            data.write_json(output)
-    else:
-        if fmt == "parquet":
-            data.to_parquet(output, index=False)
-        elif fmt == "csv":
-            data.to_csv(output, index=False)
-        elif fmt == "json":
-            data.to_json(output, orient="records", date_format="iso")
+def _save(data: pl.DataFrame, output: Path, fmt: str) -> None:
+    if fmt == "parquet":
+        data.write_parquet(output)
+    elif fmt == "csv":
+        data.write_csv(output)
+    elif fmt == "json":
+        data.write_json(output)
     print(f"Salvo: {output} ({len(data):,} linhas)")
 
 
@@ -55,7 +41,6 @@ def _cmd_read(args):
         station=station,
         start=args.start,
         end=args.end,
-        engine=args.engine,
     )
     if len(data) == 0:
         print("Nenhum dado encontrado.")
@@ -75,7 +60,7 @@ def _cmd_stations(args):
     if args.save_as:
         _save(data, args.save_as, args.format)
     else:
-        print(data.to_string())
+        print(data)
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -152,12 +137,6 @@ def get_parser() -> argparse.ArgumentParser:
         choices=["parquet", "csv", "json"],
         default="parquet",
         help="Formato de saída (padrão: parquet)",
-    )
-    p_read.add_argument(
-        "--engine",
-        choices=["pandas", "polars"],
-        default="pandas",
-        help="Engine de processamento (padrão: pandas)",
     )
 
     # stations

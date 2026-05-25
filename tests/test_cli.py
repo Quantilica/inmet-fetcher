@@ -1,7 +1,9 @@
 """Integration tests for CLI subcommands via main()."""
 
+import datetime as dt
+
 import httpx
-import pandas as pd
+import polars as pl
 import pytest
 
 from inmet_fetcher.cli import main
@@ -75,7 +77,7 @@ class TestReadCLI:
             "parquet",
         )
         assert output.exists()
-        df = pd.read_parquet(output)
+        df = pl.read_parquet(output)
         assert len(df) > 0
 
     def test_read_outputs_csv(self, tmp_path, sample_zip_path):
@@ -90,7 +92,7 @@ class TestReadCLI:
             "csv",
         )
         assert output.exists()
-        df = pd.read_csv(output)
+        df = pl.read_csv(output)
         assert len(df) > 0
 
     def test_read_outputs_json(self, tmp_path, sample_zip_path):
@@ -114,8 +116,8 @@ class TestReadCLI:
         )
         output = tmp_path / "out.parquet"
         cli("read", "-o", tmp_path, "--uf", "SP", "--save-as", output)
-        df = pd.read_parquet(output)
-        assert set(df["uf"].unique()) == {"SP"}
+        df = pl.read_parquet(output)
+        assert set(df["uf"].to_list()) == {"SP"}
 
     def test_read_filter_station(self, tmp_path, multi_station_zip_bytes):
         year_dir = tmp_path / "bdmep" / "2023"
@@ -125,8 +127,8 @@ class TestReadCLI:
         )
         output = tmp_path / "out.parquet"
         cli("read", "-o", tmp_path, "--station", "C001", "--save-as", output)
-        df = pd.read_parquet(output)
-        assert set(df["codigo_wmo"].unique()) == {"C001"}
+        df = pl.read_parquet(output)
+        assert set(df["codigo_wmo"].to_list()) == {"C001"}
 
     def test_read_filter_date_range(self, tmp_path, sample_zip_path):
         output = tmp_path / "out.parquet"
@@ -141,8 +143,8 @@ class TestReadCLI:
             "--save-as",
             output,
         )
-        df = pd.read_parquet(output)
-        assert all(df["data_hora"] >= pd.Timestamp("2023-01-02"))
+        df = pl.read_parquet(output)
+        assert (df["data_hora"] >= dt.datetime(2023, 1, 2)).all()
 
     def test_read_filter_years(self, tmp_path, make_zip):
         for year in [2021, 2022, 2023]:
@@ -153,7 +155,7 @@ class TestReadCLI:
             )
         output = tmp_path / "out.parquet"
         cli("read", "-o", tmp_path, "--years", "2022", "--save-as", output)
-        df = pd.read_parquet(output)
+        df = pl.read_parquet(output)
         assert len(df) == len(DEFAULT_DATA_ROWS)
 
     def test_read_no_data_prints_message(self, tmp_path, sample_zip_path, capsys):
@@ -167,7 +169,7 @@ class TestStationsCLI:
         output = tmp_path / "stations.csv"
         cli("stations", "-o", tmp_path, "--save-as", output)
         assert output.exists()
-        df = pd.read_csv(output)
+        df = pl.read_csv(output)
         assert "codigo_wmo" in df.columns
         assert len(df) >= 1
 
@@ -183,7 +185,7 @@ class TestStationsCLI:
             "parquet",
         )
         assert output.exists()
-        df = pd.read_parquet(output)
+        df = pl.read_parquet(output)
         assert "codigo_wmo" in df.columns
 
     def test_stations_multiple(self, tmp_path, multi_station_zip_bytes):
@@ -194,8 +196,8 @@ class TestStationsCLI:
         )
         output = tmp_path / "stations.csv"
         cli("stations", "-o", tmp_path, "--save-as", output)
-        df = pd.read_csv(output)
-        assert set(df["codigo_wmo"].tolist()) == {"A001", "B001", "C001"}
+        df = pl.read_csv(output)
+        assert set(df["codigo_wmo"].to_list()) == {"A001", "B001", "C001"}
 
     def test_stations_year_filter(self, tmp_path, make_zip):
         for year, station in [(2022, "A001"), (2023, "B001")]:
@@ -206,8 +208,8 @@ class TestStationsCLI:
             )
         output = tmp_path / "stations.csv"
         cli("stations", "-o", tmp_path, "--years", "2023", "--save-as", output)
-        df = pd.read_csv(output)
-        assert set(df["codigo_wmo"].tolist()) == {"B001"}
+        df = pl.read_csv(output)
+        assert set(df["codigo_wmo"].to_list()) == {"B001"}
 
     def test_stations_no_output_prints(self, tmp_path, sample_zip_path, capsys):
         cli("stations", "-o", tmp_path)

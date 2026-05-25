@@ -9,6 +9,7 @@ import datetime as dt
 from pathlib import Path
 from typing import Annotated
 
+import polars as pl
 import typer
 from quantilica_core.cli import get_console, setup_rich_logging
 
@@ -22,27 +23,13 @@ _CURRENT_YEAR = dt.datetime.now().year
 console = get_console()
 
 
-def _save(data, output: Path, fmt: str) -> None:
-    try:
-        import polars as pl
-        is_polars = isinstance(data, pl.DataFrame)
-    except ImportError:
-        is_polars = False
-
-    if is_polars:
-        if fmt == "parquet":
-            data.write_parquet(output)
-        elif fmt == "csv":
-            data.write_csv(output)
-        elif fmt == "json":
-            data.write_json(output)
-    else:
-        if fmt == "parquet":
-            data.to_parquet(output, index=False)
-        elif fmt == "csv":
-            data.to_csv(output, index=False)
-        elif fmt == "json":
-            data.to_json(output, orient="records", date_format="iso")
+def _save(data: pl.DataFrame, output: Path, fmt: str) -> None:
+    if fmt == "parquet":
+        data.write_parquet(output)
+    elif fmt == "csv":
+        data.write_csv(output)
+    elif fmt == "json":
+        data.write_json(output)
     console.print(f"[green]✓[/green] Salvo em [bold]{output}[/bold] ({len(data):,} linhas)")
 
 
@@ -94,15 +81,12 @@ def cmd_read(
     fmt: Annotated[
         str, typer.Option("--format", help="Formato de saída")
     ] = "parquet",
-    engine: Annotated[
-        str, typer.Option("--engine", help="Engine de processamento (pandas|polars)")
-    ] = "pandas",
 ) -> None:
     """Ler e exportar dados do INMET."""
     uf_list = [u.strip().upper() for u in uf.split(",")] if uf else None
     station_list = [s.strip() for s in station.split(",")] if station else None
     years_list = expand_years(*years) if years else None
-    data = read(output, years=years_list, uf=uf_list, station=station_list, start=start, end=end, engine=engine)
+    data = read(output, years=years_list, uf=uf_list, station=station_list, start=start, end=end)
     if len(data) == 0:
         console.print("[yellow]Nenhum dado encontrado.[/yellow]")
         return
@@ -136,4 +120,4 @@ def cmd_stations(
     if save_as:
         _save(data, save_as, fmt)
     else:
-        console.print(data.to_string())
+        console.print(str(data))

@@ -9,8 +9,7 @@ import re
 import zipfile
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
+import polars as pl
 from quantilica_io.reader import read_brazilian_csv
 from tqdm import tqdm
 
@@ -59,6 +58,17 @@ _MEASURE_COLS = [
     "vento_velocidade",
 ]
 
+_META_DTYPES: dict[str, type[pl.DataType]] = {
+    "regiao": pl.Utf8,
+    "uf": pl.Utf8,
+    "estacao": pl.Utf8,
+    "codigo_wmo": pl.Utf8,
+    "latitude": pl.Float64,
+    "longitude": pl.Float64,
+    "altitude": pl.Float64,
+    "data_fundacao": pl.Datetime,
+}
+
 
 def _rename_col(name: str) -> str:
     name = name.lower()
@@ -68,11 +78,15 @@ def _rename_col(name: str) -> str:
     return name
 
 
-def _parse_float(s: str) -> float:
+def _fix_hora(h: str) -> str:
+    return h if re.match(r"^\d{2}:\d{2}$", h) else h[:2] + ":00"
+
+
+def _parse_float(s: str) -> float | None:
     try:
         return float(s.replace(",", "."))
     except (ValueError, AttributeError):
-        return np.nan
+        return None
 
 
 def read_metadata(f) -> dict:
@@ -93,6 +107,8 @@ def read_metadata(f) -> dict:
         data_fundacao = dt.datetime.strptime(data_fundacao, "%Y-%m-%d")
     elif re.match(r"\d{2}/\d{2}/\d{2}", data_fundacao):
         data_fundacao = dt.datetime.strptime(data_fundacao, "%d/%m/%y")
+    else:
+        data_fundacao = None
     return {
         "regiao": regiao,
         "uf": uf,
@@ -105,26 +121,37 @@ def read_metadata(f) -> dict:
     }
 
 
-def _fix_hora(h: str) -> str:
-    return h if re.match(r"^\d{2}:\d{2}$", h) else h[:2] + ":00"
-
-
-def read_station_data(f) -> pd.DataFrame:
+def read_station_data(f) -> pl.DataFrame:
     d = read_brazilian_csv(
         f,
-        engine="pandas",
+        engine="polars",
         na_values=["-9999"],
-        skiprows=8,
-        usecols=range(19),
+        skip_rows=8,
+        truncate_ragged_lines=True,
     )
-    d = d.rename(columns=_rename_col)
-    d = d.loc[~d[_MEASURE_COLS].isnull().all(axis=1)]
-    dates = d["data"].str.replace("/", "-")
-    hours = d["hora"].apply(_fix_hora)
-    d = d.assign(
-        data_hora=pd.to_datetime(dates + " " + hours, format="%Y-%m-%d %H:%M"),
+    # INMET CSVs end each line with ';', creating an extra empty column
+    d = d.select(d.columns[:19])
+    d = d.rename({col: _rename_col(col) for col in d.columns})
+    # Remove rows where every measurement column is null
+    measure_cols = [c for c in _MEASURE_COLS if c in d.columns]
+    d = d.filter(
+        pl.any_horizontal(pl.col(c).is_not_null() for c in measure_cols)
     )
-    return d.drop(columns=["data", "hora"])
+    # Parse datetime: "0000 UTC" → "00:00", already "HH:MM" stays unchanged
+    d = d.with_columns(
+        pl.concat_str(
+            [
+                pl.col("data").str.replace_all("/", "-"),
+                pl.when(pl.col("hora").str.contains(r"^\d{2}:\d{2}$"))
+                .then(pl.col("hora"))
+                .otherwise(pl.col("hora").str.slice(0, 2) + ":00"),
+            ],
+            separator=" ",
+        )
+        .str.to_datetime("%Y-%m-%d %H:%M")
+        .alias("data_hora")
+    )
+    return d.drop(["data", "hora"])
 
 
 def read_zipfile(
@@ -134,7 +161,7 @@ def read_zipfile(
     station: list[str] | None = None,
     start: str | None = None,
     end: str | None = None,
-) -> pd.DataFrame:
+) -> pl.DataFrame:
     frames = []
     with zipfile.ZipFile(filepath) as z:
         files = [zf for zf in z.infolist() if not zf.is_dir()]
@@ -145,15 +172,24 @@ def read_zipfile(
             if station and meta["codigo_wmo"] not in station:
                 continue
             d = read_station_data(z.open(zf.filename))
-            d = d.assign(**meta)
+            d = d.with_columns(
+                [
+                    pl.lit(meta[k], dtype=_META_DTYPES[k]).alias(k)
+                    for k in _META_DTYPES
+                ]
+            )
             frames.append(d)
     if not frames:
-        return pd.DataFrame()
-    data = pd.concat(frames, ignore_index=True)
+        return pl.DataFrame()
+    data = pl.concat(frames)
     if start:
-        data = data.loc[data["data_hora"] >= pd.Timestamp(start)]
+        data = data.filter(
+            pl.col("data_hora") >= dt.datetime.fromisoformat(start)
+        )
     if end:
-        data = data.loc[data["data_hora"] <= pd.Timestamp(end)]
+        data = data.filter(
+            pl.col("data_hora") <= dt.datetime.fromisoformat(end)
+        )
     return data
 
 
@@ -181,8 +217,7 @@ def read(
     station: list[str] | None = None,
     start: str | None = None,
     end: str | None = None,
-    engine: str = "pandas",
-) -> pd.DataFrame:
+) -> pl.DataFrame:
     zips = find_zipfiles(data_dir, years)
     if not zips:
         raise FileNotFoundError(f"Nenhum ZIP encontrado em {data_dir}")
@@ -191,19 +226,11 @@ def read(
         for z in tqdm(zips, desc="lendo ZIPs", dynamic_ncols=True)
     ]
     if not frames:
-        return pd.DataFrame()
-    data = pd.concat(frames, ignore_index=True)
-    if engine == "polars":
-        try:
-            import polars as pl
-
-            return pl.from_pandas(data)
-        except ImportError:
-            raise ImportError("polars não instalado. Execute: pip install polars")
-    return data
+        return pl.DataFrame()
+    return pl.concat(frames)
 
 
-def read_stations(data_dir: Path, years: list[int] | None = None) -> pd.DataFrame:
+def read_stations(data_dir: Path, years: list[int] | None = None) -> pl.DataFrame:
     zips = find_zipfiles(data_dir, years)
     if not zips:
         raise FileNotFoundError(f"Nenhum ZIP encontrado em {data_dir}")
@@ -214,6 +241,6 @@ def read_stations(data_dir: Path, years: list[int] | None = None) -> pd.DataFram
                 if not zf.is_dir():
                     records.append(read_metadata(z.open(zf.filename)))
     if not records:
-        return pd.DataFrame()
-    df = pd.DataFrame(records).drop_duplicates(subset=["codigo_wmo"])
-    return df.sort_values("codigo_wmo").reset_index(drop=True)
+        return pl.DataFrame()
+    df = pl.DataFrame({k: [r[k] for r in records] for k in records[0]})
+    return df.unique(subset=["codigo_wmo"]).sort("codigo_wmo")

@@ -28,8 +28,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 dependencies = [
-    "pandas",
-    "pyarrow",
     "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git",
     "quantilica-io @ git+https://github.com/Quantilica/quantilica-io.git",
     "tqdm",

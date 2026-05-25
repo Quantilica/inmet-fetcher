@@ -1,6 +1,5 @@
 """Unit tests for pure utility functions."""
 
-import numpy as np
 import pytest
 
 from inmet_fetcher.fetch import (
@@ -43,7 +42,6 @@ class TestBuildUrl:
     def test_different_years(self):
         assert "2000" in _build_url(2000)
         assert "1999" in _build_url(1999)
-
 
 
 class TestRenameCol:
@@ -96,14 +94,14 @@ class TestParseFloat:
     def test_negative(self):
         assert _parse_float("-3,103") == pytest.approx(-3.103)
 
-    def test_invalid_string_returns_nan(self):
-        assert np.isnan(_parse_float(""))
+    def test_invalid_string_returns_none(self):
+        assert _parse_float("") is None
 
-    def test_none_returns_nan(self):
-        assert np.isnan(_parse_float(None))
+    def test_none_returns_none(self):
+        assert _parse_float(None) is None
 
-    def test_non_numeric_returns_nan(self):
-        assert np.isnan(_parse_float("abc"))
+    def test_non_numeric_returns_none(self):
+        assert _parse_float("abc") is None
 
 
 class TestFixHora:
