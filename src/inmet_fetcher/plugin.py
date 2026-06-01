@@ -59,34 +59,38 @@ def cmd_sync(
     setup_rich_logging(verbose, console=console)
     expanded = expand_years_cli(years, default_range=f"2000:{_CURRENT_YEAR}", console=console)
 
-    if verbose:
-        paths = fetch(expanded, output, workers=workers)
-    else:
-        year_tasks: dict[int, int] = {}
-        lock = threading.Lock()
+    try:
+        if verbose:
+            paths = fetch(expanded, output, workers=workers)
+        else:
+            year_tasks: dict[int, int] = {}
+            lock = threading.Lock()
 
-        with make_download_progress(console=console) as progress:
+            with make_download_progress(console=console) as progress:
 
-            def on_bytes(year: int, downloaded: int, total: int) -> None:
-                with lock:
-                    if year not in year_tasks:
+                def on_bytes(year: int, downloaded: int, total: int) -> None:
+                    with lock:
+                        if year not in year_tasks:
+                            if downloaded == 0 and total == 0:
+                                return
+                            task_id = progress.add_task(str(year), total=total or None)
+                            year_tasks[year] = task_id
+                        task_id = year_tasks[year]
                         if downloaded == 0 and total == 0:
+                            progress.update(task_id, completed=0)
                             return
-                        task_id = progress.add_task(str(year), total=total or None)
-                        year_tasks[year] = task_id
-                    task_id = year_tasks[year]
-                    if downloaded == 0 and total == 0:
-                        progress.update(task_id, completed=0)
-                        return
-                    progress.update(task_id, completed=downloaded, total=total or None)
+                        progress.update(task_id, completed=downloaded, total=total or None)
 
-            paths = fetch(expanded, output, workers=workers, on_bytes=on_bytes)
+                paths = fetch(expanded, output, workers=workers, on_bytes=on_bytes)
 
-    n = len(paths)
-    if n:
-        console.print(f"[green]✓[/green] [bold]{n}[/bold] arquivo(s) sincronizado(s).")
-    else:
-        console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
+        n = len(paths)
+        if n:
+            console.print(f"[green]✓[/green] [bold]{n}[/bold] arquivo(s) sincronizado(s).")
+        else:
+            console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
+    except KeyboardInterrupt:
+        console.print("[yellow]Download cancelado pelo usuário.[/yellow]")
+        raise typer.Exit(code=130)
 
 
 @app.command("read")

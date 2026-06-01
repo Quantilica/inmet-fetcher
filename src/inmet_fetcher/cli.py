@@ -216,9 +216,13 @@ def main(argv: list[str] | None = None) -> None:
     if not args.verbose:
         logging.getLogger("quantilica_core").setLevel(logging.WARNING)
         logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
-    {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](
-        args
-    )
+    try:
+        {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](
+            args
+        )
+    except KeyboardInterrupt:
+        print("\nOperação cancelada pelo usuário.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":
