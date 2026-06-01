@@ -31,6 +31,14 @@ class TestSyncCLI:
             },
         )
         httpx_mock.add_response(
+            method="HEAD",
+            url=_build_url(2023),
+            headers={
+                "Last-Modified": FAKE_LAST_MODIFIED,
+                "Content-Length": str(len(FAKE_CONTENT)),
+            },
+        )
+        httpx_mock.add_response(
             method="GET",
             url=_build_url(2023),
             content=FAKE_CONTENT,
@@ -38,12 +46,20 @@ class TestSyncCLI:
 
         cli("sync", "2023", "-o", tmp_path)
         repo = InmetRepository(tmp_path)
-        assert repo.path_for_year(2023, "2023.zip").exists()
+        assert repo.path_for_year(2023, "inmet-bdmep_2023@20240101.zip").exists()
 
     def test_sync_workers_flag(self, tmp_path, httpx_mock):
         from inmet_fetcher.fetch import _build_url
 
         for year in [2022, 2023]:
+            httpx_mock.add_response(
+                method="HEAD",
+                url=_build_url(year),
+                headers={
+                    "Last-Modified": FAKE_LAST_MODIFIED,
+                    "Content-Length": str(len(FAKE_CONTENT)),
+                },
+            )
             httpx_mock.add_response(
                 method="HEAD",
                 url=_build_url(year),
@@ -60,8 +76,8 @@ class TestSyncCLI:
 
         cli("sync", "2022:2023", "-o", tmp_path, "--workers", "2")
         repo = InmetRepository(tmp_path)
-        assert repo.path_for_year(2022, "2022.zip").exists()
-        assert repo.path_for_year(2023, "2023.zip").exists()
+        assert repo.path_for_year(2022, "inmet-bdmep_2022@20240101.zip").exists()
+        assert repo.path_for_year(2023, "inmet-bdmep_2023@20240101.zip").exists()
 
 
 class TestReadCLI:

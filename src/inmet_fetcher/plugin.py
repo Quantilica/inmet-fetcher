@@ -12,9 +12,14 @@ from typing import Annotated
 
 import polars as pl
 import typer
-from quantilica_core.cli import get_console, make_download_progress, setup_rich_logging
+from quantilica_core.cli import (
+    expand_years_cli,
+    get_console,
+    make_download_progress,
+    setup_rich_logging,
+)
 
-from inmet_fetcher.fetch import expand_years, fetch
+from inmet_fetcher.fetch import fetch
 from inmet_fetcher.reader import read, read_stations
 
 app = typer.Typer(help="Dados meteorológicos do INMET-BDMEP.")
@@ -52,8 +57,7 @@ def cmd_sync(
 ) -> None:
     """Sincronizar dados do INMET."""
     setup_rich_logging(verbose, console=console)
-    years_list = years if years else [f"2000:{_CURRENT_YEAR}"]
-    expanded = expand_years(*years_list)
+    expanded = expand_years_cli(years, default_range=f"2000:{_CURRENT_YEAR}", console=console)
 
     if verbose:
         paths = fetch(expanded, output, workers=workers)
@@ -115,7 +119,7 @@ def cmd_read(
     """Ler e exportar dados do INMET."""
     uf_list = [u.strip().upper() for u in uf.split(",")] if uf else None
     station_list = [s.strip() for s in station.split(",")] if station else None
-    years_list = expand_years(*years) if years else None
+    years_list = expand_years_cli(years, console=console) if years else None
     data = read(
         output, years=years_list, uf=uf_list, station=station_list, start=start, end=end
     )
@@ -142,7 +146,7 @@ def cmd_stations(
     fmt: Annotated[str, typer.Option("--format", help="Formato de saída")] = "csv",
 ) -> None:
     """Exportar catálogo de estações meteorológicas."""
-    years_list = expand_years(*years) if years else None
+    years_list = expand_years_cli(years, console=console) if years else None
     data = read_stations(output, years=years_list)
     if len(data) == 0:
         console.print("[yellow]Nenhuma estação encontrada.[/yellow]")
