@@ -37,9 +37,6 @@ def _cmd_sync(args):
         fetch(years, args.output, workers=args.workers)
         return
 
-    # Suppress quantilica INFO logs (log_step) that would corrupt tqdm output
-    logging.getLogger("quantilica").setLevel(logging.WARNING)
-
     lock = threading.Lock()
     year_downloaded: dict[int, int] = {}
     prev_sum = [0]
@@ -216,6 +213,9 @@ def main(argv: list[str] | None = None) -> None:
     parser = get_parser()
     args = parser.parse_args(argv)
     configure_cli_logging(verbose=args.verbose)
+    if not args.verbose:
+        logging.getLogger("quantilica_core").setLevel(logging.WARNING)
+        logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
     {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](
         args
     )
