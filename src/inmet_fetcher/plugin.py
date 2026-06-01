@@ -6,12 +6,13 @@
 from __future__ import annotations
 
 import datetime as dt
+import threading
 from pathlib import Path
 from typing import Annotated
 
 import polars as pl
 import typer
-from quantilica_core.cli import get_console, setup_rich_logging
+from quantilica_core.cli import get_console, make_download_progress, setup_rich_logging
 
 from inmet_fetcher.fetch import expand_years, fetch
 from inmet_fetcher.reader import read, read_stations
@@ -52,7 +53,36 @@ def cmd_sync(
     """Sincronizar dados do INMET."""
     setup_rich_logging(verbose, console=console)
     years_list = years if years else [f"2000:{_CURRENT_YEAR}"]
-    fetch(expand_years(*years_list), output, workers=workers, show_progress=not verbose)
+    expanded = expand_years(*years_list)
+
+    if verbose:
+        paths = fetch(expanded, output, workers=workers)
+    else:
+        year_tasks: dict[int, int] = {}
+        lock = threading.Lock()
+
+        with make_download_progress(console=console) as progress:
+
+            def on_bytes(year: int, downloaded: int, total: int) -> None:
+                with lock:
+                    if year not in year_tasks:
+                        if downloaded == 0 and total == 0:
+                            return
+                        task_id = progress.add_task(str(year), total=total or None)
+                        year_tasks[year] = task_id
+                    task_id = year_tasks[year]
+                    if downloaded == 0 and total == 0:
+                        progress.update(task_id, completed=0)
+                        return
+                    progress.update(task_id, completed=downloaded, total=total or None)
+
+            paths = fetch(expanded, output, workers=workers, on_bytes=on_bytes)
+
+    n = len(paths)
+    if n:
+        console.print(f"[green]✓[/green] [bold]{n}[/bold] arquivo(s) sincronizado(s).")
+    else:
+        console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
 
 
 @app.command("read")

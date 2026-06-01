@@ -5,9 +5,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import logging
+import threading
 from pathlib import Path
 
 import polars as pl
+from tqdm import tqdm
 from quantilica_core.logging import configure_cli_logging
 
 from . import __version__
@@ -31,7 +33,41 @@ def _cmd_sync(args):
         if args.years
         else expand_years(f"2000:{dt.datetime.now().year}")
     )
-    fetch(years, args.output, workers=args.workers, show_progress=not args.verbose)
+    if args.verbose:
+        fetch(years, args.output, workers=args.workers)
+        return
+
+    # Suppress quantilica INFO logs (log_step) that would corrupt tqdm output
+    logging.getLogger("quantilica").setLevel(logging.WARNING)
+
+    lock = threading.Lock()
+    year_downloaded: dict[int, int] = {}
+    prev_sum = [0]
+    pbar = tqdm(
+        total=None,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        desc="inmet-bdmep",
+        leave=True,
+    )
+
+    def on_bytes(year: int, downloaded: int, total: int) -> None:
+        with lock:
+            if downloaded == 0 and total == 0:
+                year_downloaded.pop(year, None)
+                return
+            year_downloaded[year] = downloaded
+            current_sum = sum(year_downloaded.values())
+            delta = current_sum - prev_sum[0]
+            if delta > 0:
+                pbar.update(delta)
+                prev_sum[0] = current_sum
+
+    try:
+        fetch(years, args.output, workers=args.workers, on_bytes=on_bytes)
+    finally:
+        pbar.close()
 
 
 def _cmd_read(args):

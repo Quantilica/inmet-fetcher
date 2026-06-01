@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import concurrent.futures
-import contextlib
+from collections.abc import Callable
 from pathlib import Path
 
 import quantilica_core.metadata as core_meta
 from quantilica_core.dates import expand_year_range
 from quantilica_core.http import HttpClient
 from quantilica_core.logging import get_logger
-from quantilica_core.progress import batch_progress
 from quantilica_core.storage import build_stamped_filename
 
 from .storage import InmetRepository
@@ -32,12 +31,22 @@ def build_url(year: int) -> str:
 _build_url = build_url
 
 
-def download_year(year: int, repo: InmetRepository) -> Path | None:
+def download_year(
+    year: int,
+    repo: InmetRepository,
+    on_bytes: Callable[[int, int, int], None] | None = None,
+) -> Path | None:
     """Download a single year's ZIP file using quantilica-core."""
     url = build_url(year)
     date = client.head_last_modified_date(url)
     filename = build_stamped_filename("inmet-bdmep", year, ext="zip", timestamp=date)
     target_path = repo.path_for_year(year, filename)
+    progress = None
+    if on_bytes is not None:
+
+        def progress(downloaded: int, total: int) -> None:
+            on_bytes(year, downloaded, total)
+
     try:
         return client.download_with_manifest(
             url,
@@ -45,6 +54,7 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
             source_id="inmet",
             dataset_id="bdmep",
             producer="inmet-fetcher",
+            progress=progress,
         )
     except Exception as exc:
         logger.error(f"Failed to download year {year}: {exc}")
@@ -52,27 +62,23 @@ def download_year(year: int, repo: InmetRepository) -> Path | None:
 
 
 def fetch(
-    years: list[int], destdir: Path, workers: int = 4, show_progress: bool = False
+    years: list[int],
+    destdir: Path,
+    workers: int = 4,
+    on_bytes: Callable[[int, int, int], None] | None = None,
 ) -> list[Path]:
     """Fetch multiple years in parallel."""
     repo = InmetRepository(destdir)
     results = []
-    outer = (
-        batch_progress("inmet-bdmep", total=len(years))
-        if show_progress
-        else contextlib.nullcontext()
-    )
-    with outer as pbar:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-            future_to_year = {
-                executor.submit(download_year, year, repo): year for year in years
-            }
-            for future in concurrent.futures.as_completed(future_to_year):
-                path = future.result()
-                if path:
-                    results.append(path)
-                if show_progress:
-                    pbar.update(1)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_year = {
+            executor.submit(download_year, year, repo, on_bytes): year
+            for year in years
+        }
+        for future in concurrent.futures.as_completed(future_to_year):
+            path = future.result()
+            if path:
+                results.append(path)
     return sorted(results)
 
 
