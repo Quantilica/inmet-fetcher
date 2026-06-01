@@ -43,7 +43,7 @@ inmet-fetcher = "inmet_fetcher.cli:main"
 [project.entry-points."quantilica.fetchers"]
 inmet = "inmet_fetcher.plugin:app"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "ruff>=0.9.0",
     "pytest>=8.0.0",
@@ -52,13 +52,6 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/inmet_fetcher"]
-
-[tool.ruff]
-line-length = 88
-target-version = "py312"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
