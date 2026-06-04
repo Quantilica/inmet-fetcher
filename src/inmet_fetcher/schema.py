@@ -8,7 +8,7 @@ columns (from ``_MEASURE_COLS``), station metadata fields, and the
 from __future__ import annotations
 
 import polars as pl
-from quantilica_io.schema import DataContract, Field
+from quantilica.analytics.schema import DataContract, Field
 
 from .reader import _MEASURE_COLS
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import polars as pl
-from quantilica_core.manifests import DownloadManifest
-from quantilica_io.writer import to_parquet
+from quantilica.analytics.writer import to_parquet
+from quantilica.core.manifests import DownloadManifest
 
 from .schema import BDMEP_CONTRACT
 

@@ -9,7 +9,6 @@ import datetime as dt
 
 import polars as pl
 import pytest
-
 from inmet_fetcher import BDMEP_CONTRACT
 from inmet_fetcher.reader import _MEASURE_COLS
 

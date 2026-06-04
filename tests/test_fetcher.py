@@ -4,10 +4,9 @@ import datetime as dt
 
 import httpx
 import pytest
-
 from inmet_fetcher.fetch import _build_url, download_year, fetch
 from inmet_fetcher.storage import InmetRepository
-from quantilica_core.storage import stamp_filename
+from quantilica.core.storage import stamp_filename
 
 FAKE_LAST_MODIFIED = "Mon, 01 Jan 2024 00:00:00 GMT"
 FAKE_DATE = dt.date(2024, 1, 1)

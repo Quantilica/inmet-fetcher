@@ -12,7 +12,7 @@ from typing import Annotated
 
 import polars as pl
 import typer
-from quantilica_core.cli import (
+from quantilica.core.cli import (
     expand_years_cli,
     get_console,
     make_download_progress,
@@ -57,7 +57,9 @@ def cmd_sync(
 ) -> None:
     """Sincronizar dados do INMET."""
     setup_rich_logging(verbose, console=console)
-    expanded = expand_years_cli(years, default_range=f"2000:{_CURRENT_YEAR}", console=console)
+    expanded = expand_years_cli(
+        years, default_range=f"2000:{_CURRENT_YEAR}", console=console
+    )
 
     try:
         if verbose:
@@ -79,13 +81,17 @@ def cmd_sync(
                         if downloaded == 0 and total == 0:
                             progress.update(task_id, completed=0)
                             return
-                        progress.update(task_id, completed=downloaded, total=total or None)
+                        progress.update(
+                            task_id, completed=downloaded, total=total or None
+                        )
 
                 paths = fetch(expanded, output, workers=workers, on_bytes=on_bytes)
 
         n = len(paths)
         if n:
-            console.print(f"[green]✓[/green] [bold]{n}[/bold] arquivo(s) sincronizado(s).")
+            console.print(
+                f"[green]✓[/green] [bold]{n}[/bold] arquivo(s) sincronizado(s)."
+            )
         else:
             console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
     except KeyboardInterrupt:

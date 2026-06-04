@@ -9,8 +9,8 @@ import threading
 from pathlib import Path
 
 import polars as pl
+from quantilica.core.logging import configure_cli_logging
 from tqdm import tqdm
-from quantilica_core.logging import configure_cli_logging
 
 from . import __version__
 from .fetch import expand_years, fetch
@@ -214,7 +214,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     configure_cli_logging(verbose=args.verbose)
     if not args.verbose:
-        logging.getLogger("quantilica_core").setLevel(logging.WARNING)
+        logging.getLogger("quantilica.core").setLevel(logging.WARNING)
         logging.getLogger("inmet_fetcher").setLevel(logging.WARNING)
     try:
         {"sync": _cmd_sync, "read": _cmd_read, "stations": _cmd_stations}[args.command](

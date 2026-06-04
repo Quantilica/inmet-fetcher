@@ -5,9 +5,9 @@ import datetime as dt
 import httpx
 import polars as pl
 import pytest
-
 from inmet_fetcher.cli import main
 from inmet_fetcher.storage import InmetRepository
+
 from tests.conftest import DEFAULT_DATA_ROWS, make_zip_bytes
 
 FAKE_LAST_MODIFIED = "Mon, 01 Jan 2024 00:00:00 GMT"

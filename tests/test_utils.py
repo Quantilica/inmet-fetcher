@@ -1,7 +1,6 @@
 """Unit tests for pure utility functions."""
 
 import pytest
-
 from inmet_fetcher.fetch import (
     _build_url,
     expand_years,

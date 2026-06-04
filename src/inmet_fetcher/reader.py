@@ -10,11 +10,10 @@ import zipfile
 from pathlib import Path
 
 import polars as pl
-from quantilica_io.reader import read_brazilian_csv
+from quantilica.analytics.reader import read_brazilian_csv
 from tqdm import tqdm
 
 from .storage import InmetRepository
-
 
 _COL_PATTERNS = [
     (r"data", "data"),

@@ -6,11 +6,11 @@ import concurrent.futures
 from collections.abc import Callable
 from pathlib import Path
 
-import quantilica_core.metadata as core_meta
-from quantilica_core.dates import expand_year_range
-from quantilica_core.http import HttpClient
-from quantilica_core.logging import get_logger
-from quantilica_core.storage import build_stamped_filename
+import quantilica.core.metadata as core_meta
+from quantilica.core.dates import expand_year_range
+from quantilica.core.http import HttpClient
+from quantilica.core.logging import get_logger
+from quantilica.core.storage import build_stamped_filename
 
 from .storage import InmetRepository
 
@@ -72,8 +72,7 @@ def fetch(
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_year = {
-            executor.submit(download_year, year, repo, on_bytes): year
-            for year in years
+            executor.submit(download_year, year, repo, on_bytes): year for year in years
         }
         for future in concurrent.futures.as_completed(future_to_year):
             path = future.result()
