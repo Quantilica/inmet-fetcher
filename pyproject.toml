@@ -30,7 +30,7 @@ classifiers = [
 ]
 dependencies = [
     "quantilica-core>=0.3.2",
-    "quantilica-analytics @ git+https://github.com/Quantilica/quantilica-analytics.git",
+    "quantilica-analytics>=0.2.0",
 ]
 
 [project.urls]
