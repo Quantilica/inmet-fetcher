@@ -6,6 +6,7 @@ import zipfile
 
 import polars as pl
 import pytest
+
 from inmet_fetcher.reader import (
     find_zipfiles,
     read,
@@ -14,13 +15,10 @@ from inmet_fetcher.reader import (
     read_stations,
     read_zipfile,
 )
-
 from tests.conftest import (
     ALL_NULL_ROW,
-    CSV_HEADER,
     DEFAULT_DATA_ROWS,
     make_station_csv,
-    make_zip_bytes,
 )
 
 # ─── helpers ────────────────────────────────────────────────────────────────

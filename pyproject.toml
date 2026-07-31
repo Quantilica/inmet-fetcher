@@ -61,6 +61,10 @@ line-length = 88
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/inmet_fetcher/fetch.py" = ["E501"]
+"tests/*" = ["E501"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/inmet_fetcher"]
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import logging
+import sys
 import threading
 from pathlib import Path
 
@@ -101,7 +102,6 @@ def _cmd_stations(args):
 
 
 def get_parser() -> argparse.ArgumentParser:
-    current_year = dt.datetime.now().year
     parser = argparse.ArgumentParser(
         prog="inmet-fetcher",
         description="INMET BDMEP — coleta e leitura de dados meteorológicos",

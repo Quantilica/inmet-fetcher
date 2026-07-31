@@ -94,9 +94,9 @@ def cmd_sync(
             )
         else:
             console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as err:
         console.print("[yellow]Download cancelado pelo usuário.[/yellow]")
-        raise typer.Exit(code=130)
+        raise typer.Exit(code=130) from err
 
 
 @app.command("read")
