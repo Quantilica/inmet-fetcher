@@ -13,6 +13,7 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0"
 __all__ = [
+    "__version__",
     "expand_years",
     "fetch",
     "generate_catalog",

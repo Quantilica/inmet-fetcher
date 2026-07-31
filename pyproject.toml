@@ -6,7 +6,8 @@ readme = "README.md"
 authors = [
     { name = "Komesu, D.K.", email = "daniel@dkko.me" },
 ]
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 keywords = [
     "inmet",
@@ -20,15 +21,15 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Typing :: Typed",
 ]
 dependencies = [
-    "quantilica-core @ git+https://github.com/Quantilica/quantilica-core.git",
+    "quantilica-core>=0.3.2",
     "quantilica-analytics @ git+https://github.com/Quantilica/quantilica-analytics.git",
 ]
 
@@ -50,6 +51,16 @@ dev = [
     "pytest-httpx>=0.36.2",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-p", "no:cacheprovider"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/inmet_fetcher"]
 
@@ -57,5 +68,5 @@ packages = ["src/inmet_fetcher"]
 allow-direct-references = true
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"

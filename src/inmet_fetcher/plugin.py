@@ -125,8 +125,10 @@ def cmd_read(
         Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
     fmt: Annotated[str, typer.Option("--format", help="Formato de saída")] = "parquet",
+    verbose: Annotated[bool, typer.Option("--verbose", help="Logs detalhados")] = False,
 ) -> None:
     """Ler e exportar dados do INMET."""
+    setup_rich_logging(verbose, console=console)
     uf_list = [u.strip().upper() for u in uf.split(",")] if uf else None
     station_list = [s.strip() for s in station.split(",")] if station else None
     years_list = expand_years_cli(years, console=console) if years else None
@@ -154,8 +156,10 @@ def cmd_stations(
         Path | None, typer.Option("--save-as", help="Arquivo de exportação")
     ] = None,
     fmt: Annotated[str, typer.Option("--format", help="Formato de saída")] = "csv",
+    verbose: Annotated[bool, typer.Option("--verbose", help="Logs detalhados")] = False,
 ) -> None:
     """Exportar catálogo de estações meteorológicas."""
+    setup_rich_logging(verbose, console=console)
     years_list = expand_years_cli(years, console=console) if years else None
     data = read_stations(output, years=years_list)
     if len(data) == 0:
