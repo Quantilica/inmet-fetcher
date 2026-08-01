@@ -27,7 +27,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --group dev --extra-index-url https://quantilica.com/quantilica-index/simple/
+        run: uv sync --group dev --index https://quantilica.com/quantilica-index/simple/ --index-strategy unsafe-best-match
 
       - name: Lint with ruff
         run: |
