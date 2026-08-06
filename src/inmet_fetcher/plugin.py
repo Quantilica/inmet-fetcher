@@ -5,22 +5,28 @@
 
 from __future__ import annotations
 
+import concurrent.futures
 import datetime as dt
-import threading
 from pathlib import Path
 from typing import Annotated
 
 import polars as pl
 import typer
 from quantilica.core.cli import (
+    ProgressPool,
     expand_years_cli,
     get_console,
+    graceful_executor,
+    make_batch_progress,
     make_download_progress,
     setup_rich_logging,
 )
+from rich.console import Group
+from rich.live import Live
 
-from inmet_fetcher.fetch import fetch
+from inmet_fetcher.fetch import download_year, fetch
 from inmet_fetcher.reader import read, read_stations
+from inmet_fetcher.storage import InmetRepository
 
 app = typer.Typer(help="Dados meteorológicos do INMET-BDMEP.")
 
@@ -60,33 +66,14 @@ def cmd_sync(
     expanded = expand_years_cli(
         years, default_range=f"2000:{_CURRENT_YEAR}", console=console
     )
+    total = len(expanded)
 
-    try:
-        if verbose:
-            paths = fetch(expanded, output, workers=workers)
-        else:
-            year_tasks: dict[int, int] = {}
-            lock = threading.Lock()
+    if total == 0:
+        console.print("[yellow]Nenhum ano selecionado para sincronizar.[/yellow]")
+        return
 
-            with make_download_progress(console=console) as progress:
-
-                def on_bytes(year: int, downloaded: int, total: int) -> None:
-                    with lock:
-                        if year not in year_tasks:
-                            if downloaded == 0 and total == 0:
-                                return
-                            task_id = progress.add_task(str(year), total=total or None)
-                            year_tasks[year] = task_id
-                        task_id = year_tasks[year]
-                        if downloaded == 0 and total == 0:
-                            progress.update(task_id, completed=0)
-                            return
-                        progress.update(
-                            task_id, completed=downloaded, total=total or None
-                        )
-
-                paths = fetch(expanded, output, workers=workers, on_bytes=on_bytes)
-
+    if verbose:
+        paths = fetch(expanded, output, workers=workers)
         n = len(paths)
         if n:
             console.print(
@@ -94,9 +81,52 @@ def cmd_sync(
             )
         else:
             console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
-    except KeyboardInterrupt as err:
-        console.print("[yellow]Download cancelado pelo usuário.[/yellow]")
-        raise typer.Exit(code=130) from err
+        return
+
+    repo = InmetRepository(output)
+    overall = make_batch_progress(console)
+    file_prog = make_download_progress(console)
+    overall_task = overall.add_task("[cyan]Baixando...[/cyan]", total=total)
+
+    downloaded = 0
+    errors: list[tuple[str, str]] = []
+
+    pool = ProgressPool(workers=workers, file_prog=file_prog)
+
+    def _worker(year: int) -> bool:
+        try:
+            with pool.acquire(description=f"[cyan]{year}[/cyan]") as cb:
+                path = download_year(year, repo, progress=cb)
+                return path is not None
+        except Exception as exc:
+            errors.append((str(year), str(exc)))
+            return False
+
+    with graceful_executor(max_workers=workers) as executor:
+        try:
+            with Live(
+                Group(overall, file_prog), console=console, refresh_per_second=10
+            ):
+                futures = {executor.submit(_worker, y): y for y in expanded}
+                for future in concurrent.futures.as_completed(futures):
+                    overall.update(overall_task, advance=1)
+                    if future.result():
+                        downloaded += 1
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Interrompido.[/yellow]")
+            raise typer.Exit(130) from None
+
+    if downloaded:
+        console.print(
+            f"[green]✓[/green] [bold]{downloaded}[/bold] arquivo(s) sincronizado(s)."
+        )
+    else:
+        console.print("[yellow]Nenhum arquivo novo para sincronizar.[/yellow]")
+
+    if errors:
+        console.print(f"[red]{len(errors)} erro(s):[/red]")
+        for eid, emsg in errors:
+            console.print(f"  {eid}: {emsg}")
 
 
 @app.command("read")

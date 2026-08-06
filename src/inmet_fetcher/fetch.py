@@ -34,18 +34,13 @@ _build_url = build_url
 def download_year(
     year: int,
     repo: InmetRepository,
-    on_bytes: Callable[[int, int, int], None] | None = None,
+    progress: Callable[[int, int], None] | None = None,
 ) -> Path | None:
     """Download a single year's ZIP file using quantilica-core."""
     url = build_url(year)
     date = client.head_last_modified_date(url)
     filename = build_stamped_filename("inmet-bdmep", year, ext="zip", timestamp=date)
     target_path = repo.path_for_year(year, filename)
-    progress = None
-    if on_bytes is not None:
-
-        def progress(downloaded: int, total: int) -> None:
-            on_bytes(year, downloaded, total)
 
     try:
         return client.download_with_manifest(
@@ -71,9 +66,17 @@ def fetch(
     repo = InmetRepository(destdir)
     results = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        future_to_year = {
-            executor.submit(download_year, year, repo, on_bytes): year for year in years
-        }
+
+        def _download(year: int) -> Path | None:
+            progress_cb = None
+            if on_bytes is not None:
+
+                def progress_cb(downloaded: int, total: int) -> None:
+                    on_bytes(year, downloaded, total)
+
+            return download_year(year, repo, progress_cb)
+
+        future_to_year = {executor.submit(_download, year): year for year in years}
         for future in concurrent.futures.as_completed(future_to_year):
             path = future.result()
             if path:
