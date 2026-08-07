@@ -15,9 +15,7 @@ from .storage import DataRepository
 def path_builder(
     output_dir: Path, entry: dict[str, Any], last_modified: dt.date | None
 ) -> Path:
-    return DataRepository(output_dir).path_for_entry(
-        entry, last_modified=last_modified
-    )
+    return DataRepository(output_dir).path_for_entry(entry, last_modified=last_modified)
 
 
 fetcher = FetcherApp(

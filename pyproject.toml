@@ -1,6 +1,6 @@
 [project]
 name = "inmet-fetcher"
-version = "0.3.0"
+version = "0.3.1"
 description = "Coletor de dados meteorológicos do INMET-BDMEP"
 readme = "README.md"
 authors = [
@@ -29,7 +29,9 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "quantilica-core>=0.3.2",
+    "quantilica-core>=0.4.0",
+    "quantilica-cli>=0.2.0",
+    "quantilica-catalog>=0.2.0",
     "quantilica-analytics>=0.2.0",
 ]
 

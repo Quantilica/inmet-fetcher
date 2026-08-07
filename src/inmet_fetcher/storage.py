@@ -28,5 +28,7 @@ class DataRepository(BaseDataRepository):
     ) -> Path:
         """Compute the local path for a dataset entry."""
         year = entry["year"]
-        filename = build_stamped_filename("inmet-bdmep", year, ext=entry["ext"], timestamp=last_modified)
+        filename = build_stamped_filename(
+            "inmet-bdmep", year, ext=entry["ext"], timestamp=last_modified
+        )
         return self.path_for_year(year, filename)
