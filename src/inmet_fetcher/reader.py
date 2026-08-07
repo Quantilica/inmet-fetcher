@@ -13,7 +13,7 @@ import polars as pl
 from quantilica.analytics.reader import read_brazilian_csv
 from tqdm import tqdm
 
-from .storage import InmetRepository
+from .storage import DataRepository
 
 _COL_PATTERNS = [
     (r"data", "data"),
@@ -185,7 +185,7 @@ def read_zipfile(
 
 def find_zipfiles(data_dir: Path, years: list[int] | None = None) -> list[Path]:
     """Locate INMET BDMEP ZIPs under ``bdmep/{year}/*.zip`` (Padrão B)."""
-    repo = InmetRepository(data_dir)
+    repo = DataRepository(data_dir)
     zips: list[Path] = []
     if years:
         for year in years:

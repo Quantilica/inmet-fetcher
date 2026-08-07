@@ -2,10 +2,9 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
-from .fetch import expand_years, fetch, generate_catalog
 from .reader import read, read_stations
 from .schema import BDMEP_CONTRACT
-from .storage import InmetRepository
+from .storage import DataRepository
 from .writer import write_to_parquet
 
 try:
@@ -14,12 +13,9 @@ except PackageNotFoundError:
     __version__ = "0.0.0"
 __all__ = [
     "__version__",
-    "expand_years",
-    "fetch",
-    "generate_catalog",
     "read",
     "read_stations",
-    "InmetRepository",
+    "DataRepository",
     "write_to_parquet",
     "BDMEP_CONTRACT",
 ]
