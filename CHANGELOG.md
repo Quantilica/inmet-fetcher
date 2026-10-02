@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2] - 2026-10-02
+
+### Corrigido
+- Remoção da diretiva legada `[tool.hatch.metadata] allow-direct-references = true` em `pyproject.toml` para conformidade estrita com o padrão de publicação PEP 503.
+
 ## [0.4.1] - 2026-08-31
 ### Corrigido
 - Quitação de dívida de lint (E501/docstrings longas) herdada dos sweeps de
