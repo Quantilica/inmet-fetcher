@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Corrigido
+- `pyproject.toml`: extra `analysis` declara `polars>=1.0.0` explicitamente
+  (`reader.py` importa polars direto, antes só vinha transitivamente).
+
 ### Alterado
 - `cli.py` protege o import do plugin; sem o host a CLI standalone sai com código 1 e orienta `quantilica install inmet`.
 
