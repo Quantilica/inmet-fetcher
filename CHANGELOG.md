@@ -5,6 +5,37 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.5.0] - 2026-10-20
+
+### Corrigido
+- O leitor não lia os arquivos reais do INMET (os testes passavam com fixtures
+  sintéticas):
+  - Latin-1 decodificado explicitamente; antes, lido de um `ZipExtFile`, o
+    encoding era ignorado e 6 das 17 medidas perdiam o nome.
+  - Todos os campos lidos como texto e convertidos depois; antes, o tipo era
+    inferido em 100 linhas e `,2` (vírgula sem zero) derrubava a leitura.
+  - Colunas mapeadas pelo nome do cabeçalho, não pela posição; cabeçalho
+    desconhecido, coluna faltando ou repetida levantam `ValueError`.
+  - Conversão estrita: valor que não é número nem marca de ausente (`-9999`,
+    vazio) levanta `ValueError` em vez de virar nulo.
+- ZIP com dois recortes da mesma estação (2026: até 31/08 e até 30/09): só o
+  que termina por último é lido; antes os dois eram concatenados.
+- `find_zipfiles()`/`read()` leem só a versão mais recente de cada ano
+  (`latest_only=True`); antes, todas as versões guardadas na pasta eram
+  concatenadas, repetindo horas.
+- `read_zipfile()` levanta `ValueError` se sobrar par (estação, hora) repetido.
+- README: removidos `inmet.fetch()` e `--engine pandas`, que não existem.
+
+### Alterado
+- **Incompatível:** `data_hora` passa a ter fuso UTC (`Datetime(time_zone="UTC")`),
+  como diz o cabeçalho dos arquivos; `start`/`end` sem fuso são tratados como UTC.
+- `read_station_data()`/`read_zipfile()` aceitam `drop_empty=False` para manter as
+  horas em que todas as medidas estão ausentes.
+- Extra `analysis` inclui `tzdata` no Windows (base de fusos para o UTC).
+
+### Adicionado
+- Testes com o início de dois arquivos reais (layout até 2018 e a partir de 2019).
+
 ## [0.4.3] - 2026-10-20
 
 ### Corrigido
