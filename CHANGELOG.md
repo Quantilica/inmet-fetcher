@@ -5,11 +5,12 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [0.4.3] - 2026-10-20
 
 ### Corrigido
-- `pyproject.toml`: extra `analysis` declara `polars>=1.0.0` explicitamente
-  (`reader.py` importa polars direto, antes só vinha transitivamente).
+- `pyproject.toml`: extra `analysis` declara `polars>=1.0.0` e `quantilica-analytics>=0.4.0` explicitamente.
+  - Dependência `tqdm>=4.66` declarada explicitamente.
+  - `src/inmet_fetcher/py.typed` esvaziado conforme PEP 561.
 
 ### Alterado
 - `cli.py` protege o import do plugin; sem o host a CLI standalone sai com código 1 e orienta `quantilica install inmet`.
