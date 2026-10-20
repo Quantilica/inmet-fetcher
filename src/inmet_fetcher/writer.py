@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import polars as pl
-from quantilica.analytics.writer import to_parquet
+try:
+    import polars as pl
+    from quantilica.analytics.writer import to_parquet
+except ImportError as exc:
+    raise ImportError(
+        "inmet_fetcher.writer requer o extra 'analysis': "
+        "uv add 'inmet-fetcher[analysis]' "
+        "--index https://index.quantilica.com/simple/"
+    ) from exc
 from quantilica.core.manifests import DownloadManifest
 
 from .schema import BDMEP_CONTRACT

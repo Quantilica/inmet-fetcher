@@ -25,8 +25,15 @@ import zipfile
 from pathlib import Path
 from typing import IO
 
-import polars as pl
-from tqdm import tqdm
+try:
+    import polars as pl
+    from tqdm import tqdm
+except ImportError as exc:
+    raise ImportError(
+        "inmet_fetcher.reader requer o extra 'analysis': "
+        "uv add 'inmet-fetcher[analysis]' "
+        "--index https://index.quantilica.com/simple/"
+    ) from exc
 
 from .storage import DataRepository
 

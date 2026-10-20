@@ -7,8 +7,15 @@ columns (from ``_MEASURE_COLS``), station metadata fields, and the
 
 from __future__ import annotations
 
-import polars as pl
-from quantilica.analytics.schema import DataContract, Field
+try:
+    import polars as pl
+    from quantilica.analytics.schema import DataContract, Field
+except ImportError as exc:
+    raise ImportError(
+        "inmet_fetcher.schema requer o extra 'analysis': "
+        "uv add 'inmet-fetcher[analysis]' "
+        "--index https://index.quantilica.com/simple/"
+    ) from exc
 
 from .reader import _MEASURE_COLS
 
