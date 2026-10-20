@@ -5,6 +5,14 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.5.1] - 2026-10-20
+
+### Corrigido
+- Sem o extra `analysis`, importar `inmet_fetcher.reader`, `inmet_fetcher.schema`
+  ou `inmet_fetcher.writer` levanta `ImportError` com a instrução de instalação
+  (`uv add 'inmet-fetcher[analysis]' --index https://index.quantilica.com/simple/`)
+  em vez de `ModuleNotFoundError` cru de `polars`/`quantilica.analytics`.
+
 ## [0.5.0] - 2026-10-20
 
 ### Corrigido
