@@ -21,7 +21,7 @@ _METADATA_FIELDS: list[Field] = [
     Field(name="longitude", dtype=pl.Float64, required=False),
     Field(name="altitude", dtype=pl.Float64, required=False),
     Field(name="data_fundacao", dtype=pl.Datetime, required=False),
-    Field(name="data_hora", dtype=pl.Datetime),
+    Field(name="data_hora", dtype=pl.Datetime(time_zone="UTC")),
 ]
 
 _MEASURE_FIELDS: list[Field] = [

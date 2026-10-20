@@ -25,7 +25,7 @@ def _make_valid_frame() -> pl.DataFrame:
             "longitude": [-60.016],
             "altitude": [48.0],
             "data_fundacao": [dt.datetime(1990, 6, 15)],
-            "data_hora": [dt.datetime(2023, 1, 1, 0, 0)],
+            "data_hora": [dt.datetime(2023, 1, 1, 0, 0, tzinfo=dt.UTC)],
             **{col: [0.0] for col in _MEASURE_COLS},
         }
     )
@@ -69,7 +69,7 @@ class TestBdmepContractCast:
                 "uf": ["AM"],
                 "estacao": ["Manaus"],
                 "codigo_wmo": ["A001"],
-                "data_hora": [dt.datetime(2023, 1, 1)],
+                "data_hora": [dt.datetime(2023, 1, 1, tzinfo=dt.UTC)],
                 "latitude": [-3],  # int, contract expects Float64
                 **{col: [0] for col in _MEASURE_COLS},
             }

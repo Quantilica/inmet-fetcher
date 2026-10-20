@@ -11,13 +11,14 @@ O **inmet-fetcher** é um pacote do ecossistema Quantilica para acessar dados hi
 ## Funcionalidades
 
 - **Download paralelo**: Baixe múltiplos anos simultaneamente com `--workers N`
-- **Limpeza automática**: Remove linhas vazias e trata valores nulos (`-9999`)
-- **Padronização de datas**: Combina `data` + `hora` em `datetime` nativo
+- **Leitura estrita**: Latin-1 decodificado explicitamente, colunas mapeadas pelo nome do cabeçalho (não pela posição), valores ausentes (`-9999` ou campo vazio) viram nulo e qualquer outro valor não numérico levanta `ValueError`
+- **Dois layouts**: até 2018 (`AAAA-MM-DD`, `HH:MM`, `-9999`) e a partir de 2019 (`AAAA/MM/DD`, `HHMM UTC`, campo vazio); vírgula decimal sem zero à esquerda (`,2`) lida como `0.2`
+- **Datas em UTC**: `data` + `hora` viram `data_hora` (`Datetime` com fuso UTC, como diz o cabeçalho do INMET)
+- **Sem horas repetidas**: só a versão mais recente de cada ano é lida, e só o recorte que termina por último quando o ZIP traz dois por estação (ex.: 2026)
 - **Colunas em snake_case**: Nomes padronizados, sem caracteres especiais
 - **Metadados por estação**: Lat, Lon, Altitude, UF, Código WMO incluídos
 - **Filtros na leitura**: Por UF, estação, intervalo de datas
-- **Exportação**: Parquet, CSV ou JSON
-- **pandas** e **polars** suportados
+- **Exportação**: Parquet com o contrato `BDMEP_CONTRACT` (Polars)
 
 ---
 
@@ -60,9 +61,6 @@ inmet-fetcher read -o ./dados --years 2022:2023 --uf SP,RJ --save-as sp_rj.csv -
 
 # Filtrar por estação e período
 inmet-fetcher read -o ./dados --station A701 --start 2020-01-01 --end 2020-12-31 --save-as a701.parquet
-
-# Usar polars como engine
-inmet-fetcher read -o ./dados --uf MG --save-as mg.parquet --engine polars
 ```
 
 ### `inmet-fetcher stations` — Catálogo de estações
@@ -75,16 +73,19 @@ inmet-fetcher stations -o ./dados --save-as estacoes.csv
 
 ## API Python
 
+A leitura requer o extra `analysis` (Polars). O download é feito pela CLI
+(`inmet-fetcher sync`).
+
 ```python
-import inmet_fetcher as inmet
 from pathlib import Path
+
+import polars as pl
+
+import inmet_fetcher as inmet
 
 data_dir = Path("./dados")
 
-# Baixar anos com 4 workers
-inmet.fetch([2020, 2021, 2022, 2023], data_dir, workers=4)
-
-# Ler com filtros
+# Ler com filtros (datas sem fuso são tratadas como UTC)
 df = inmet.read(
     data_dir,
     years=[2022, 2023],
@@ -94,11 +95,11 @@ df = inmet.read(
 )
 
 # Temperatura média por estado
-print(df.groupby("uf")["temperatura_ar"].mean())
+print(df.group_by("uf").agg(pl.col("temperatura_ar").mean()))
 
 # Catálogo de estações
 estacoes = inmet.read_stations(data_dir)
-print(estacoes[["codigo_wmo", "estacao", "uf", "latitude", "longitude"]])
+print(estacoes.select("codigo_wmo", "estacao", "uf", "latitude", "longitude"))
 ```
 
 ---
@@ -107,7 +108,7 @@ print(estacoes[["codigo_wmo", "estacao", "uf", "latitude", "longitude"]])
 
 | Coluna | Descrição |
 | :--- | :--- |
-| `data_hora` | Data e hora (Timestamp) |
+| `data_hora` | Data e hora em UTC (`Datetime`, fuso UTC) |
 | `precipitacao` | Precipitação Total (mm) |
 | `pressao_atmosferica` | Pressão ao Nível da Estação (mB) |
 | `pressao_atmosferica_maxima` | Pressão Máxima (mB) |

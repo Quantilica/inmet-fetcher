@@ -118,9 +118,9 @@ class TestReadStationData:
 
     def test_datetime_values(self):
         df = read_station_data(self._make_file())
-        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0)
-        assert df["data_hora"][1] == dt.datetime(2023, 1, 1, 1, 0)
-        assert df["data_hora"][2] == dt.datetime(2023, 1, 2, 0, 0)
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0, tzinfo=dt.UTC)
+        assert df["data_hora"][1] == dt.datetime(2023, 1, 1, 1, 0, tzinfo=dt.UTC)
+        assert df["data_hora"][2] == dt.datetime(2023, 1, 2, 0, 0, tzinfo=dt.UTC)
 
     def test_decimal_comma_parsed(self):
         df = read_station_data(self._make_file())
@@ -145,7 +145,7 @@ class TestReadStationData:
             "2023/01/01;00:00;0,0;1013,2;1013,5;1012,8;100,0;28,5;24,0;29,0;28,0;25,0;23,5;85;80;82;180;5,2;3,1;"
         ]
         df = read_station_data(self._make_file(data_rows=rows))
-        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0)
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 0, 0, tzinfo=dt.UTC)
 
 
 # ─── read_zipfile ───────────────────────────────────────────────────────────
@@ -197,18 +197,20 @@ class TestReadZipfile:
 
     def test_filter_start_date(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, start="2023-01-02")
-        assert (df["data_hora"] >= dt.datetime(2023, 1, 2)).all()
+        assert (df["data_hora"] >= dt.datetime(2023, 1, 2, tzinfo=dt.UTC)).all()
 
     def test_filter_end_date(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, end="2023-01-01")
-        assert (df["data_hora"] <= dt.datetime(2023, 1, 1, 23, 59, 59)).all()
+        assert (
+            df["data_hora"] <= dt.datetime(2023, 1, 1, 23, 59, 59, tzinfo=dt.UTC)
+        ).all()
 
     def test_filter_date_range(self, sample_zip_path):
         df = read_zipfile(
             sample_zip_path, start="2023-01-01 01:00", end="2023-01-01 01:00"
         )
         assert len(df) == 1
-        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 1, 0)
+        assert df["data_hora"][0] == dt.datetime(2023, 1, 1, 1, 0, tzinfo=dt.UTC)
 
     def test_filter_date_no_match_returns_empty(self, sample_zip_path):
         df = read_zipfile(sample_zip_path, start="2025-01-01")
@@ -304,8 +306,8 @@ class TestRead:
 
     def test_date_filter(self, tmp_path, sample_zip_path):
         df = read(tmp_path, start="2023-01-02", end="2023-01-02")
-        assert (df["data_hora"] >= dt.datetime(2023, 1, 2)).all()
-        assert (df["data_hora"] <= dt.datetime(2023, 1, 2, 23, 59)).all()
+        assert (df["data_hora"] >= dt.datetime(2023, 1, 2, tzinfo=dt.UTC)).all()
+        assert (df["data_hora"] <= dt.datetime(2023, 1, 2, 23, 59, tzinfo=dt.UTC)).all()
 
     def test_multi_year_concat(self, tmp_path, make_zip):
         for year in [2021, 2022]:
