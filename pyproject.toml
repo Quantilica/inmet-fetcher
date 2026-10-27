@@ -59,6 +59,11 @@ inmet = "inmet_fetcher.lake:converter"
 dev = [
     "ruff>=0.9.0",
     "pytest>=8.0.0",
+    # Só para os testes: tests/test_lake.py exercita o comando convert do plugin Typer,
+    # que depende do host (quantilica-cli). Não são dependências do pacote.
+    "quantilica-cli>=0.13.0",
+    "typer>=0.15.0",
+    "rich>=13.0.0",
 ]
 
 [tool.pytest.ini_options]
