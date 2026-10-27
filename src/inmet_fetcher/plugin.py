@@ -37,4 +37,21 @@ fetcher = FetcherApp(
     path_builder=path_builder,
 )
 
+
+def convert(
+    input_dir: Path,
+    lake_dir: Path,
+    *,
+    dataset: list[str] | None = None,
+    force: bool = False,
+) -> Any:
+    """Converte arquivos brutos do INMET para o lake Hive (Parquet)."""
+    from inmet_fetcher import lake
+
+    return lake.converter.convert(input_dir, lake_dir, datasets=dataset, force=force)
+
+
+fetcher.command_convert(convert)
+fetcher.command_pipeline(convert)
+
 app = fetcher.app

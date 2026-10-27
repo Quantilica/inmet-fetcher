@@ -5,6 +5,13 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [0.6.0] - 2026-10-27
+
+### Adicionado
+- Módulo `inmet_fetcher.lake` e entry point `quantilica.lake`: conversão direta dos arquivos ZIP anuais do INMET-BDMEP para o lake Parquet com particionamento Hive (`ano=`).
+- Comandos CLI `convert` e `pipeline` integrados via SDK do `FetcherApp`, com suporte a `--lake`, `--dataset` e `--force`.
+- Extra `analysis` atualizado para `quantilica-analytics>=0.8.0`.
+
 ## [0.5.1] - 2026-10-20
 
 ### Corrigido

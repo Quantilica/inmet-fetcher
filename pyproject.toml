@@ -1,6 +1,6 @@
 [project]
 name = "inmet-fetcher"
-version = "0.5.1"
+version = "0.6.0"
 description = "Coletor de dados meteorológicos do INMET-BDMEP"
 readme = "README.md"
 authors = [
@@ -35,7 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 analysis = [
     "polars>=1.0.0",
-    "quantilica-analytics>=0.3.0",
+    "quantilica-analytics>=0.8.0",
     "tqdm>=4.66.0",
     # data_hora em UTC: no Windows o Python não traz a base de fusos IANA.
     "tzdata>=2024.1; sys_platform == 'win32'",
@@ -51,6 +51,9 @@ inmet-fetcher = "inmet_fetcher.cli:main"
 
 [project.entry-points."quantilica.fetchers"]
 inmet = "inmet_fetcher.plugin:app"
+
+[project.entry-points."quantilica.lake"]
+inmet = "inmet_fetcher.lake:converter"
 
 [dependency-groups]
 dev = [
