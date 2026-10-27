@@ -29,7 +29,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "quantilica-core>=0.4.0",
+    "quantilica-core>=0.13.0",
 ]
 
 [project.optional-dependencies]

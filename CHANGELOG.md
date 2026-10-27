@@ -11,6 +11,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Módulo `inmet_fetcher.lake` e entry point `quantilica.lake`: conversão direta dos arquivos ZIP anuais do INMET-BDMEP para o lake Parquet com particionamento Hive (`ano=`).
 - Comandos CLI `convert` e `pipeline` integrados via SDK do `FetcherApp`, com suporte a `--lake`, `--dataset` e `--force`.
 - Extra `analysis` atualizado para `quantilica-analytics>=0.8.0`.
+- Dependência de base `quantilica-core` atualizada para `>=0.13.0` para conformidade com o contrato de layout Hive.
 
 ## [0.5.1] - 2026-10-20
 
