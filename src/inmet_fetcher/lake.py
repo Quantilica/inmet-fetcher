@@ -12,8 +12,9 @@ from pathlib import Path
 
 try:
     import polars as pl
-    from quantilica.analytics.lake import LakeError, LakeWriter
-    from quantilica.core.lake import DatasetDescriptor
+    from quantilica.analytics.lake import LakeError, LakeWriter, origin_matches
+    from quantilica.core.lake import DatasetDescriptor, file_key, partition_dir
+    from quantilica.core.manifests import read_manifest_sidecar
 except ImportError as exc:
     raise ImportError(
         "inmet_fetcher.lake requer o extra 'analysis': "
@@ -51,6 +52,26 @@ def year_from_path(path: Path) -> str | None:
     if match_parent:
         return match_parent["year"]
     return None
+
+
+def already_in_lake(writer: LakeWriter, path: Path, year: str) -> bool:
+    """Whether ``path`` is already in the lake with its current ``sha256``.
+
+    Answers from the raw file alone, so an annual ZIP with hundreds of members
+    is never opened. Uses the ``sha256`` of the manifest sidecar when there is
+    one; otherwise hashes the file. Always ``False`` with ``force``.
+    """
+    if writer.force:
+        return False
+    manifest = read_manifest_sidecar(path)
+    if manifest is None or not manifest.sha256:
+        return writer.is_current(path, partitions={"ano": year})
+    return origin_matches(
+        partition_dir(writer.dataset_dir, {"ano": year}),
+        file_key(path),
+        manifest.sha256,
+        layout_version=writer.descriptor.layout_version,
+    )
 
 
 class LakeConverter:
@@ -118,6 +139,11 @@ class LakeConverter:
                 continue
 
             try:
+                # Extrair um ZIP anual custa caro; o bruto já presente no lake
+                # com o mesmo sha256 é pulado antes de abri-lo.
+                if already_in_lake(writer, path, year):
+                    result.skipped += 1
+                    continue
                 raw_df = read_zipfile(path)
                 df = BDMEP_CONTRACT.cast(raw_df)
                 written = writer.write_polars(

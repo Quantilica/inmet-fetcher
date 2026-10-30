@@ -5,6 +5,14 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Corrigido
+- A conversão para o lake não abre mais o ZIP anual de um arquivo que já está no
+  lake com o mesmo conteúdo: a verificação é feita pelo hash do arquivo (do
+  manifesto, quando existe) antes da extração. Uma segunda execução sem
+  mudanças deixa de extrair centenas de arquivos por ano e termina em segundos.
+
 ## [0.6.0] - 2026-10-27
 
 ### Adicionado
