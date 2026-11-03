@@ -13,7 +13,12 @@ from pathlib import Path
 try:
     import polars as pl
     from quantilica.analytics.lake import LakeError, LakeWriter, origin_matches
-    from quantilica.core.lake import DatasetDescriptor, file_key, partition_dir
+    from quantilica.core.lake import (
+        DatasetDescriptor,
+        file_key,
+        partition_dir,
+        partition_types_for,
+    )
     from quantilica.core.manifests import read_manifest_sidecar
 except ImportError as exc:
     raise ImportError(
@@ -29,7 +34,7 @@ from inmet_fetcher.schema import BDMEP_CONTRACT
 SOURCE_ID = "inmet"
 DATASET_ID = "bdmep"
 PARTITION_KEYS = ["ano"]
-PARTITION_TYPES = {"ano": "varchar"}
+PARTITION_TYPES = partition_types_for(PARTITION_KEYS)
 
 _YEAR = re.compile(r"(?:^|[-_@])(?P<year>(?:19|20)\d{2})(?:[-_@.]|$)")
 

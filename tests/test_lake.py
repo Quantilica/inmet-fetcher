@@ -72,7 +72,7 @@ def test_convert_end_to_end(tmp_path: Path) -> None:
     df = scan_dataset(dataset_dir).collect()
     assert df.height > 0
     assert "ano" in df.columns
-    assert df["ano"][0] == "2015"
+    assert df["ano"][0] == 2015
     assert "temperatura_ar" in df.columns
 
     # Second run skips

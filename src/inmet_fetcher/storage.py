@@ -49,7 +49,8 @@ class DataRepository(BaseDataRepository):
             The Path where the dataset entry file should be stored.
         """
         year = entry["year"]
+        timestamp = last_modified or dt.date.today()
         filename = build_stamped_filename(
-            "inmet-bdmep", year, ext=entry["ext"], timestamp=last_modified
+            "inmet-bdmep", year, ext=entry["ext"], timestamp=timestamp
         )
         return self.path_for_year(year, filename)
