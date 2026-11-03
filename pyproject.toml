@@ -29,7 +29,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "quantilica-core>=0.13.0",
+    "quantilica-core>=0.16.0",
 ]
 
 [project.optional-dependencies]
@@ -61,7 +61,7 @@ dev = [
     "pytest>=8.0.0",
     # Só para os testes: tests/test_lake.py exercita o comando convert do plugin Typer,
     # que depende do host (quantilica-cli). Não são dependências do pacote.
-    "quantilica-cli>=0.13.0",
+    "quantilica-cli>=0.15.0",
     "typer>=0.15.0",
     "rich>=13.0.0",
 ]
