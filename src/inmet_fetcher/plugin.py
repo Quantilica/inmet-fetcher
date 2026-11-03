@@ -36,7 +36,7 @@ fetcher = FetcherApp(
     aliases_dict=GROUP_ALIASES,
     list_datasets=list_datasets,
     path_builder=path_builder,
-    freshness_policy=FreshnessPolicy.REMOTE_ONLY,
+    freshness_policy=FreshnessPolicy.HEAD_OR_MANIFEST,
 )
 
 

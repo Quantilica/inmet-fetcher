@@ -8,6 +8,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Não lançado]
 
 ### Corrigido
+- Política de frescor volta a F1 (`HEAD_OR_MANIFEST`): `REMOTE_ONLY` (F3, para fontes sem validadores) causava re-download diário de fontes com Last-Modified/ETag, porque descartava o Last-Modified e o nome do arquivo caía em `@hoje`.
 - A conversão para o lake não abre mais o ZIP anual de um arquivo que já está no
   lake com o mesmo conteúdo: a verificação é feita pelo hash do arquivo (do
   manifesto, quando existe) antes da extração. Uma segunda execução sem
