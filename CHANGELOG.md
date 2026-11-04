@@ -5,6 +5,14 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Corrigido
+- Sem o extra `analysis`, o comando `convert` termina com código 1 e a instrução de instalação (`quantilica install inmet --extra analysis`), sem traceback.
+
+### Alterado
+- O diretório de saída padrão (`/data/inmet`) passa a ser declarado explicitamente no plugin; o valor não muda.
+
 ## [0.6.1] - 2026-11-04
 
 ### Corrigido
