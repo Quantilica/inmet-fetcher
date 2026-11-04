@@ -5,7 +5,7 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [0.6.1] - 2026-11-04
 
 ### Corrigido
 - Política de frescor volta a F1 (`HEAD_OR_MANIFEST`): `REMOTE_ONLY` (F3, para fontes sem validadores) causava re-download diário de fontes com Last-Modified/ETag, porque descartava o Last-Modified e o nome do arquivo caía em `@hoje`.
@@ -13,6 +13,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
   lake com o mesmo conteúdo: a verificação é feita pelo hash do arquivo (do
   manifesto, quando existe) antes da extração. Uma segunda execução sem
   mudanças deixa de extrair centenas de arquivos por ano e termina em segundos.
+
+### Alterado
+- Exige `quantilica-core>=0.16.0`.
 
 ## [0.6.0] - 2026-10-27
 
