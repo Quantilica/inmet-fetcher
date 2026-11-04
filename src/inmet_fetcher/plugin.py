@@ -36,6 +36,7 @@ fetcher = FetcherApp(
     aliases_dict=GROUP_ALIASES,
     list_datasets=list_datasets,
     path_builder=path_builder,
+    default_output=Path("/data/inmet"),
     freshness_policy=FreshnessPolicy.HEAD_OR_MANIFEST,
 )
 
@@ -48,7 +49,13 @@ def convert(
     force: bool = False,
 ) -> Any:
     """Converte arquivos brutos do INMET para o lake Hive (Parquet)."""
-    from inmet_fetcher import lake
+    try:
+        from inmet_fetcher import lake
+    except ImportError as exc:
+        raise ImportError(
+            "Conversão para o lake requer o extra 'analysis'. "
+            "Instale com: quantilica install inmet --extra analysis"
+        ) from exc
 
     return lake.converter.convert(input_dir, lake_dir, datasets=dataset, force=force)
 
