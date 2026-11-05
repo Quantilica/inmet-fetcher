@@ -7,6 +7,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Alterado
+- A chave do arquivo bruto no lake passa a ser montada com `composite_file_key` do `quantilica-core` (nome do arquivo e, quando houver, o membro do ZIP), sem mudar as partições.
+
 ### Removido
 - Módulo `inmet_fetcher.writer` e a função `write_to_parquet`: a conversão para Parquet é feita pelo comando `convert` (lake particionado por ano), que já substituía esse caminho. Os arquivos já gravados no lake não mudam de nome nem de formato.
 
