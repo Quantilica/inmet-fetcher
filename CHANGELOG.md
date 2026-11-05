@@ -113,7 +113,7 @@ versão.
 - CLI `inmet-fetcher` com os subcomandos `sync`, `read` e `stations`; exportação
   para Parquet, CSV ou JSON (pandas e polars).
 
-### Histórico anterior
+**Histórico anterior.**
 
 Versões `v0.1.0`/`v0.1.0.1` (2022-08-30) antecedem a adoção deste changelog e
 estão registradas nas tags do repositório.
