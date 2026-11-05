@@ -15,7 +15,7 @@ try:
     from quantilica.analytics.lake import LakeError, LakeWriter, origin_matches
     from quantilica.core.lake import (
         DatasetDescriptor,
-        file_key,
+        composite_file_key,
         partition_dir,
         partition_types_for,
     )
@@ -73,7 +73,7 @@ def already_in_lake(writer: LakeWriter, path: Path, year: str) -> bool:
         return writer.is_current(path, partitions={"ano": year})
     return origin_matches(
         partition_dir(writer.dataset_dir, {"ano": year}),
-        file_key(path),
+        composite_file_key(path),
         manifest.sha256,
         layout_version=writer.descriptor.layout_version,
     )
