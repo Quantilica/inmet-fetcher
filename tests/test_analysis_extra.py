@@ -8,7 +8,6 @@ import pytest
 MODULES = [
     "inmet_fetcher.reader",
     "inmet_fetcher.schema",
-    "inmet_fetcher.writer",
 ]
 
 

@@ -13,7 +13,6 @@ except PackageNotFoundError:
 try:
     from .reader import read, read_stations
     from .schema import BDMEP_CONTRACT
-    from .writer import write_to_parquet
 
     _HAS_ANALYSIS = True
 except ImportError:
@@ -21,7 +20,6 @@ except ImportError:
     read = None
     read_stations = None
     BDMEP_CONTRACT = None
-    write_to_parquet = None
 
 __all__ = [
     "__version__",
@@ -34,6 +32,5 @@ if _HAS_ANALYSIS:
             "BDMEP_CONTRACT",
             "read",
             "read_stations",
-            "write_to_parquet",
         ]
     )

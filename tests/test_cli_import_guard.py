@@ -123,4 +123,3 @@ def test_import_inmet_sem_polars(_no_analysis) -> None:
     assert inmet_fetcher.read is None
     assert inmet_fetcher.read_stations is None
     assert inmet_fetcher.BDMEP_CONTRACT is None
-    assert inmet_fetcher.write_to_parquet is None
