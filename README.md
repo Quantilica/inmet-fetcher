@@ -138,6 +138,10 @@ Dados obtidos do portal do **Instituto Nacional de Meteorologia (INMET)**: [http
 
 ---
 
+## Documentação dos dados
+
+O que o dataset contém, de onde vem, como chega ao lake e os cuidados de uso: [docs/README.md](docs/README.md).
+
 ## Desenvolvimento
 
 ```bash

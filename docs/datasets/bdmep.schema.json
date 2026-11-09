@@ -1,0 +1,167 @@
+{
+  "fonte": "inmet",
+  "dataset": "bdmep",
+  "gerado_em": "2026-11-09T13:53:43+00:00",
+  "particoes": [
+    "ano"
+  ],
+  "colunas": [
+    {
+      "nome": "precipitacao",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "pressao_atmosferica",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "pressao_atmosferica_maxima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "pressao_atmosferica_minima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "radiacao",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_ar",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_orvalho",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_maxima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_minima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_orvalho_maxima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "temperatura_orvalho_minima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "umidade_relativa_maxima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "umidade_relativa_minima",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "umidade_relativa",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "vento_direcao",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "vento_rajada",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "vento_velocidade",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "data_hora",
+      "tipos": [
+        "timestamp[us, tz=UTC]"
+      ]
+    },
+    {
+      "nome": "regiao",
+      "tipos": [
+        "large_string"
+      ]
+    },
+    {
+      "nome": "uf",
+      "tipos": [
+        "large_string"
+      ]
+    },
+    {
+      "nome": "estacao",
+      "tipos": [
+        "large_string"
+      ]
+    },
+    {
+      "nome": "codigo_wmo",
+      "tipos": [
+        "large_string"
+      ]
+    },
+    {
+      "nome": "latitude",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "longitude",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "altitude",
+      "tipos": [
+        "double"
+      ]
+    },
+    {
+      "nome": "data_fundacao",
+      "tipos": [
+        "timestamp[us]"
+      ]
+    }
+  ],
+  "arquivos": 4
+}

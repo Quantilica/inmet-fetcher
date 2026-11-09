@@ -7,6 +7,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Adicionado
+- Documentação dos dados em `docs/`: página da fonte, página do dataset `bdmep` com dicionário de todas as variáveis e esquema de referência do lake, verificados por `tests/test_docs.py`.
+
 ### Alterado
 - A chave do arquivo bruto no lake passa a ser montada com `composite_file_key` do `quantilica-core` (nome do arquivo e, quando houver, o membro do ZIP), sem mudar as partições.
 
