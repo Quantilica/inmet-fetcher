@@ -7,6 +7,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [0.6.3] - 2026-11-09
+
 ### Adicionado
 - Documentação dos dados em `docs/`: página da fonte, página do dataset `bdmep` com dicionário de todas as variáveis e esquema de referência do lake, verificados por `tests/test_docs.py`.
 
