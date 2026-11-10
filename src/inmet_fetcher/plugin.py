@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from quantilica.cli.sdk import FetcherApp
+from quantilica.core.registry import FetcherInfo
 from quantilica.core.sync import FreshnessPolicy
 
 from .catalog import GROUP_ALIASES, GROUPS, list_datasets
@@ -32,6 +33,14 @@ def path_builder(
 fetcher = FetcherApp(
     name="inmet-fetcher",
     help="Dados meteorológicos do INMET-BDMEP.",
+    info=FetcherInfo(
+        id="inmet",
+        nome="INMET - Banco de Dados Meteorológicos (BDMEP)",
+        orgao="Instituto Nacional de Meteorologia (INMET)",
+        homepage="https://portal.inmet.gov.br/dadoshistoricos",
+        cadencia="monthly",
+        dominio="agropecuaria",
+    ),
     groups_dict=GROUPS,
     aliases_dict=GROUP_ALIASES,
     list_datasets=list_datasets,
