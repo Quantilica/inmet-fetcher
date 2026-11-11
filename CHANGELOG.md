@@ -12,6 +12,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Alterado
 - Requer `quantilica-core>=0.19.0` (e `quantilica-cli>=0.17.0` como host).
+- `FetcherInfo.licenca` passa a declarar a licença da fonte: Sem licença declarada; dados públicos pela Lei 12.527/2011 (LAI) e Decreto 8.777/2016.
 
 ## [0.6.3] - 2026-11-09
 

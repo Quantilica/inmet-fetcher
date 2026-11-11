@@ -37,6 +37,10 @@ fetcher = FetcherApp(
         id="inmet",
         nome="INMET - Banco de Dados Meteorológicos (BDMEP)",
         orgao="Instituto Nacional de Meteorologia (INMET)",
+        licenca=(
+            "Sem licença declarada; dados públicos pela Lei 12.527/2011 (LAI) "
+            "e Decreto 8.777/2016"
+        ),
         homepage="https://portal.inmet.gov.br/dadoshistoricos",
         cadencia="monthly",
         dominio="agropecuaria",
