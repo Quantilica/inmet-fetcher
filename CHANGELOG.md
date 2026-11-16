@@ -7,6 +7,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Alterado
+- Infraestrutura de CI e de repositório alinhada ao template de fetchers da Quantilica (`fetcher-template`): workflows `public-hygiene` e `publish`, `dependabot.yml`, `.gitignore` e `pytest` com `pythonpath = ["src"]`. O `.copier-answers.yml` passa a registrar as respostas do template, para receber as melhorias dele por `copier update`.
+
 ### Adicionado
 - Testes: identidade do registro conferida.
 

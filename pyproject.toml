@@ -88,6 +88,7 @@ url = "https://index.quantilica.com/simple/"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = ["-p", "no:cacheprovider"]
 
 [tool.ruff]

@@ -1,0 +1,18 @@
+_commit: cacf1f7
+_src_path: /home/dk/code/Quantilica/fetcher-template
+author_email: daniel@dkko.me
+author_name: Komesu, D.K.
+cadencia: monthly
+description: Coletor de dados meteorológicos do INMET-BDMEP
+domain: clima
+dominio: agropecuaria
+has_lake: true
+homepage: https://portal.inmet.gov.br/dadoshistoricos
+licenca: Sem licença declarada; dados públicos pela Lei 12.527/2011 (LAI) e Decreto
+    8.777/2016
+orgao: Instituto Nacional de Meteorologia (INMET)
+package_name: inmet-fetcher
+package_slug: inmet_fetcher
+protocol: http
+source_id: inmet
+source_name: INMET - Banco de Dados Meteorológicos (BDMEP)
