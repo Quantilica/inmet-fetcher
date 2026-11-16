@@ -44,4 +44,3 @@ jobs:
           repository: Quantilica/quantilica-index
           event-type: fetcher_released
           client-payload: '{"repository": "${{ github.repository }}", "tag": "${{ github.ref_name }}"}'
-
