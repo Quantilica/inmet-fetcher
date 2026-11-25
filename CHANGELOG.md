@@ -14,6 +14,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Testes: identidade do registro conferida.
 
 ### Corrigido
+- **O conversor abre só a versão vigente de cada ZIP.** O bruto guarda cada versão carimbada (`bdmep-AAAA@AAAAMMDD.zip`) e todas viram o mesmo Parquet; o `convert` as extraía todas, em ordem de nome, e o resultado só saía certo porque a mais nova era gravada por último. Agora escolhe a vigente por `quantilica.core.lake.select_current` antes de abrir qualquer ZIP: as anteriores contam em `skipped`, a segunda rodada não reconverte nada e uma versão nova converte só ela, substituindo o Parquet anterior sem duplicar linhas. (O conversor não tem `inventory()`; a auditoria já escolhe a vigente por conta própria.)
 - CI: o pyproject declara o PyPI antes do índice Quantilica (`[[tool.uv.index]]`), e o workflow perde `--index` e `--index-strategy`. Com a estratégia padrão `first-index`, o `uv sync` só consulta o índice para o que não está no PyPI (`quantilica-analytics`) e deixa de receber o 503 intermitente que o GitHub Pages devolve a caminhos inexistentes.
 
 ## [0.7.0] - 2026-11-14

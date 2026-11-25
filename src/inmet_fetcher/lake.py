@@ -18,6 +18,7 @@ try:
         composite_file_key,
         partition_dir,
         partition_types_for,
+        select_current,
     )
     from quantilica.core.manifests import read_manifest_sidecar
 except ImportError as exc:
@@ -122,6 +123,13 @@ class LakeConverter:
             for p in input_dir.rglob("*")
             if p.is_file() and p.suffix.lower() == ".zip"
         )
+        # O bruto guarda cada versão carimbada (``bdmep-2026@AAAAMMDD.zip``) e todas
+        # mapeiam para o mesmo Parquet: só a vigente é convertida, as anteriores
+        # contam como puladas (sem abrir o ZIP).
+        vigentes = {
+            input_dir / p
+            for p in select_current(p.relative_to(input_dir) for p in files)
+        }
 
         writer = LakeWriter(
             lake_dir / SOURCE_ID / DATASET_ID,
@@ -136,6 +144,9 @@ class LakeConverter:
         )
 
         for path in files:
+            if path not in vigentes:
+                result.skipped += 1
+                continue
             year = year_from_path(path)
             if not year:
                 result.errors.append(
