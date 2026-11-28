@@ -19,12 +19,13 @@ from .storage import DataRepository
 
 logger = logging.getLogger(__name__)
 
-# HEAD de frescor (carimbo do nome do arquivo): orçamento curto, bem menor que o do
-# download (180 s e 5 tentativas por padrão no cliente do host, ajustáveis por
-# ``QUANTILICA_HTTP_*``). Com a fonte fora do ar, cada arquivo gastava
-# 5 x 180 s no HEAD e outro tanto no download: 27 arquivos em 4 threads ficaram
-# 5,5 h presos. Agora o HEAD desiste em ~1 min e, se nem a conexão se faz, o
-# arquivo falha sem tentar o download. O orçamento do download não muda.
+# HEAD de frescor (carimbo do nome do arquivo) do ``sync``: orçamento curto, bem
+# menor que o do download (180 s e 5 tentativas por padrão no cliente do host,
+# ajustáveis por ``QUANTILICA_HTTP_*``). Com a fonte fora do ar, cada arquivo
+# gastava 5 x 180 s no HEAD e outro tanto no download. Agora o HEAD desiste em
+# ~1 min e, se nem a conexão se faz, o arquivo falha sem tentar o download. O
+# orçamento do download não muda. Vale só para o ``sync``: o ``check`` usa o HEAD
+# do host, com o orçamento cheio; ali a proteção é o limite de tempo do job.
 PROBE_TIMEOUT = 30.0
 PROBE_ATTEMPTS = 2
 PROBE_RETRY_DELAY = 1.0
