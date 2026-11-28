@@ -157,3 +157,56 @@ def test_second_run_skips_without_extracting(
     res3 = converter.convert(raw_dir, lake_dir, force=True)
     assert res3.converted == 2
     assert len(calls) == 2
+
+
+def test_zip_vazio_e_erro_do_arquivo_e_nao_grava_parquet(tmp_path: Path) -> None:
+    """ZIP sem estação nenhuma não vira Parquet sem colunas com ``errors=0``."""
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    with zipfile.ZipFile(raw_dir / "2020.zip", "w"):
+        pass  # ZIP vazio
+    with zipfile.ZipFile(raw_dir / "2021.zip", "w") as z:
+        z.mkdir("INMET_2021/")  # só diretório
+
+    lake_dir = tmp_path / "lake"
+    res = converter.convert(raw_dir, lake_dir)
+    assert res.converted == 0
+    assert len(res.errors) == 2
+    assert all("sem nenhuma estação reconhecida" in e for e in res.errors)
+    assert {e.split(":")[0] for e in res.errors} == {"2020.zip", "2021.zip"}
+    assert list((lake_dir).rglob("*.parquet")) == []
+
+
+def test_zip_ruim_nao_impede_os_outros_anos(tmp_path: Path) -> None:
+    if not FIXTURE_CSV_2015.exists():
+        pytest.skip("Fixture 2015 não encontrada")
+    raw_dir = tmp_path / "raw"
+    _make_zips(raw_dir, ("2015",))
+    with zipfile.ZipFile(raw_dir / "2020.zip", "w"):
+        pass
+    res = converter.convert(raw_dir, tmp_path / "lake")
+    assert res.converted == 1
+    assert len(res.errors) == 1 and res.errors[0].startswith("2020.zip:")
+
+
+def test_contrato_vai_ao_escritor_e_fica_no_rodape(tmp_path: Path) -> None:
+    """O Parquet registra a versão do contrato e a segunda rodada ainda pula."""
+    if not FIXTURE_CSV_2015.exists():
+        pytest.skip("Fixture 2015 não encontrada")
+    import pyarrow.parquet as pq
+    from quantilica.analytics.lake import META_CONTRACT_VERSION
+
+    from inmet_fetcher.schema import BDMEP_CONTRACT
+
+    raw_dir = tmp_path / "raw"
+    _make_zips(raw_dir, ("2015",))
+    lake_dir = tmp_path / "lake"
+    res = converter.convert(raw_dir, lake_dir)
+    assert not res.errors, res.errors
+    parquet = next((lake_dir / SOURCE_ID / DATASET_ID).rglob("*.parquet"))
+    footer = pq.read_metadata(parquet).metadata
+    assert footer[META_CONTRACT_VERSION.encode()].decode() == str(
+        BDMEP_CONTRACT.version
+    )
+    again = converter.convert(raw_dir, lake_dir)
+    assert (again.converted, again.skipped, again.errors) == (0, 1, [])

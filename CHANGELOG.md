@@ -5,6 +5,19 @@ Todas as mudanças notáveis deste projeto serão documentadas neste arquivo.
 O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Corrigido
+
+- `catalog`: em 1º de janeiro o catálogo gerava `2027.zip`, que dá 404 até o INMET publicar o primeiro fechamento do ano, e o `sync` saía 3 todo dia. A entrada do ano corrente passa a levar `pending_publication` durante 90 dias desde 1º de janeiro (`PENDING_GRACE_DAYS`, estimativa: o ZIP do ano só existe depois do primeiro fechamento de mês, no fim de janeiro, e é republicado cerca de uma semana depois de cada corte); o `sync` do host trata o 404 dela como "ainda não publicado" (pulada, sem erro; no `check`, motivo `pending-publication`). Passada a folga, o 404 volta a ser erro. Anos fechados nunca levam a marca.
+- `lake`: ZIP vazio, ou sem nenhum CSV de estação reconhecido, deixa de gravar um Parquet sem colunas com `errors=0`: vira erro do arquivo no `ConvertResult` ("ZIP sem nenhuma estação reconhecida"), o `convert` sai 1 e os demais anos seguem. Estações sem nenhuma observação gravam o Parquet e registram aviso.
+- `lake`: o contrato `BDMEP_CONTRACT` passa ao escritor (`write_polars(contract=...)`): o esquema é validado antes de gravar e o Parquet registra a versão do contrato no rodapé. Os dados e as colunas não mudam, mas, por causa do rodapé novo, **o primeiro `convert` depois da atualização reconverte cada ZIP uma vez**.
+- `sync`: com a fonte fora do ar, o HEAD de frescor (carimbo do nome do arquivo) gastava o orçamento inteiro do download (5 tentativas de até 180 s) e o download repetia o gasto: em 28/11 foram 5,5 h para 27 arquivos. O HEAD passa a usar o cliente padrão do host com orçamento próprio e curto (`PROBE_TIMEOUT` = 30 s, `PROBE_ATTEMPTS` = 2, `PROBE_RETRY_DELAY` = 1 s; um valor menor fixado em `QUANTILICA_HTTP_*` prevalece) e, se nem a conexão se estabelece, o arquivo falha na hora com a mensagem "fonte inacessível" (erro do `--summary-json`, saída 3 ou 1), sem tentar o download. Falhas do HEAD que não são de conexão (status de erro, resposta lenta, servidor sem HEAD) continuam sem impedir o download. O orçamento do download não muda. Vale para o `sync`; o `check` usa o HEAD do host.
+
+### Alterado
+
+- Requer `quantilica-cli>=0.30.0` como host (reconhece `pending_publication`).
+
 ## [0.7.1] - 2026-11-25
 
 ### Alterado

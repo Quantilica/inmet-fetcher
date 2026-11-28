@@ -6,6 +6,7 @@ Station data is combined, typed with BDMEP schema, and stored in Parquet format.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,6 +32,8 @@ except ImportError as exc:
 from inmet_fetcher import __version__
 from inmet_fetcher.reader import read_zipfile
 from inmet_fetcher.schema import BDMEP_CONTRACT
+
+logger = logging.getLogger(__name__)
 
 SOURCE_ID = "inmet"
 DATASET_ID = "bdmep"
@@ -71,12 +74,15 @@ def already_in_lake(writer: LakeWriter, path: Path, year: str) -> bool:
         return False
     manifest = read_manifest_sidecar(path)
     if manifest is None or not manifest.sha256:
-        return writer.is_current(path, partitions={"ano": year})
+        return writer.is_current(
+            path, partitions={"ano": year}, contract=BDMEP_CONTRACT
+        )
     return origin_matches(
         partition_dir(writer.dataset_dir, {"ano": year}),
         composite_file_key(path),
         manifest.sha256,
         layout_version=writer.descriptor.layout_version,
+        contract_version=BDMEP_CONTRACT.version,
     )
 
 
@@ -161,11 +167,26 @@ class LakeConverter:
                     result.skipped += 1
                     continue
                 raw_df = read_zipfile(path)
+                if raw_df.width == 0:
+                    # Sem nenhum CSV de estação reconhecido (ZIP vazio ou só com
+                    # outros arquivos): gravar um Parquet sem colunas esconderia
+                    # o problema do arquivo.
+                    raise ValueError(
+                        "ZIP sem nenhuma estação reconhecida (vazio ou sem "
+                        "CSV de estação)"
+                    )
+                if raw_df.height == 0:
+                    logger.warning(
+                        "%s: as estações do ZIP não têm nenhuma observação; "
+                        "Parquet gravado vazio",
+                        path.name,
+                    )
                 df = BDMEP_CONTRACT.cast(raw_df)
                 written = writer.write_polars(
                     df,
                     path,
                     partitions={"ano": year},
+                    contract=BDMEP_CONTRACT,
                     converter=f"inmet-fetcher {__version__}",
                 )
             except (LakeError, OSError, pl.exceptions.PolarsError, Exception) as exc:

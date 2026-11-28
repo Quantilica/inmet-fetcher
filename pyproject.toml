@@ -64,7 +64,9 @@ dev = [
     "quantilica-core[docs]>=0.19.0",
     # Só para os testes: tests/test_lake.py exercita o comando convert do plugin Typer,
     # que depende do host (quantilica-cli). Não são dependências do pacote.
-    "quantilica-cli>=0.17.0",
+    # Piso = 0.30.0, primeira versão que reconhece a marca ``pending_publication``
+    # da entrada do catálogo (404 do ano corrente vira "ainda não publicado").
+    "quantilica-cli>=0.30.0",
     "typer>=0.15.0",
     "rich>=13.0.0",
 ]
